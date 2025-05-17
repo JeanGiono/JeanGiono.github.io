@@ -1,0 +1,1086 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>DEMATEL 分析工具 (含因果圖)</title>
+   <script src="https://cdn.tailwindcss.com"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+   <script type="text/javascript" async
+       src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+   </script>
+   <style>
+       body {
+           font-family: 'Inter', sans-serif; /* 使用 Inter 字體 */
+       }
+       /* 表格容器優化 */
+       .table-container {
+           max-height: 400px; /* 可選：調整最大高度，或移除以顯示完整高度 */
+           overflow: auto;    /* 關鍵：處理水平和垂直方向的捲動 */
+           width: 100%;       /* 容器佔滿可用寬度 */
+           border: 1px solid #e2e8f0; /* 容器外框顏色 */
+           border-radius: 0.375rem;   /* 圓角 (Tailwind 'rounded-md') */
+           margin-bottom: 1rem;       /* 與下方元素的間距 */
+           background-color: #f9fafb; /* 容器背景色，使其與頁面有所區分 */
+       }
+
+       .table-container table {
+           width: 100%; /* 表格嘗試填滿容器寬度 */
+           min-width: max-content; /* 確保表格至少與其內容同寬，防止欄位過窄 */
+           border-collapse: separate; /* Needed for sticky header/column borders */
+           border-spacing: 0;
+       }
+
+       /* 通用 th, td 樣式 */
+       th, td {
+           border: 1px solid #e2e8f0; 
+           padding: 0.5rem; /* Tailwind p-2 */
+           text-align: center;
+           white-space: nowrap; /* 防止文字換行，確保 max-content 正常運作 */
+       }
+       .table-container td input[type="number"] {
+           padding: 0.25rem; /* Tailwind p-1 for inputs inside table */
+           max-width: 80px; /* Limit width of input cells */
+       }
+
+
+       /* 固定表頭列 */
+       .table-container thead th {
+           position: sticky;
+           top: -1px; /* Offset by 1px to ensure border visibility with container */
+           background-color: #f8fafc; /* 表頭背景色 (Tailwind bg-gray-50) */
+           z-index: 20; /* 確保表頭在其他內容之上 */
+       }
+
+       /* 固定表頭列的第一個儲存格 (左上角，例如 "S", "X", "T") */
+       .table-container thead th:first-child {
+           position: sticky;
+           left: -1px; /* Offset by 1px */
+           z-index: 30; /* 最高層級，確保在左上角 */
+           /* background-color: #f8fafc;  Ensured by general thead th */
+       }
+
+       /* 固定表格主體 (tbody) 的第一欄 (因素名稱) */
+       .table-container tbody th:first-child {
+           position: sticky;
+           left: -1px; /* Offset by 1px */
+           background-color: #ffffff; /* 使用白色背景與內容區分 */
+           z-index: 10; /* 在普通儲存格之上，但在表頭之下 */
+       }
+       /* 如果 tbody 中還有其他 th (非首欄)，給予預設背景色 */
+       .table-container tbody th {
+           background-color: #f9fafb; /* Tailwind bg-gray-50 or similar */
+       }
+       /* 再次確認 tbody 首欄的背景色優先級 */
+       .table-container tbody th:first-child {
+           background-color: #ffffff; /* Tailwind bg-white */
+       }
+
+
+       input[type="number"], select {
+           width: auto; 
+           min-width: 100px; 
+           text-align: center;
+           border: 1px solid #cbd5e1;
+           border-radius: 0.25rem;
+           padding: 0.25rem 0.5rem; 
+       }
+       #customThresholdInputContainer input[type="number"] {
+           width: 120px; 
+       }
+       .section-title {
+           font-size: 1.5rem; 
+           font-weight: 600; 
+           margin-bottom: 1rem; 
+           color: #1e3a8a; 
+       }
+       .subsection-title {
+           font-size: 1.25rem; 
+           font-weight: 600; 
+           margin-top: 1rem;
+           margin-bottom: 0.5rem; 
+           color: #1e40af; 
+       }
+       .content-text {
+           font-size: 0.95rem;
+           line-height: 1.6;
+           color: #334155; 
+       }
+       .content-text p, .content-text ul, .content-text ol {
+           margin-bottom: 0.75rem;
+       }
+       .content-text ul {
+           list-style-type: disc;
+           margin-left: 1.5rem;
+       }
+        .content-text ol > li > ul { 
+           margin-top: 0.25rem;
+       }
+       .content-text code {
+           background-color: #f1f5f9;
+           padding: 0.1rem 0.3rem;
+           border-radius: 0.25rem;
+           font-family: monospace;
+       }
+       .h4-custom { 
+           font-size: 1.05rem;
+           font-weight: 600;
+           margin-top: 0.75rem;
+           margin-bottom: 0.25rem;
+           color: #1d4ed8; 
+       }
+       .btn {
+           padding: 0.5rem 1rem;
+           border-radius: 0.375rem;
+           font-weight: 500;
+           transition: background-color 0.3s;
+           cursor: pointer;
+       }
+       .btn-primary {
+           background-color: #2563eb; 
+           color: white;
+       }
+       .btn-primary:hover {
+           background-color: #1d4ed8; 
+       }
+       .btn-secondary {
+           background-color: #64748b; 
+           color: white;
+       }
+       .btn-secondary:hover {
+           background-color: #475569; 
+       }
+       .btn-success {
+           background-color: #16a34a; 
+           color: white;
+       }
+       .btn-success:hover {
+           background-color: #15803d; 
+       }
+       .info-box {
+           background-color: #eff6ff; 
+           border-left: 4px solid #3b82f6; 
+           padding: 1rem;
+           margin-bottom: 1rem;
+           border-radius: 0.25rem;
+       }
+       #causalDiagramContainer {
+           width: 100%;
+           max-width: 800px; 
+           margin: 0 auto; 
+       }
+   </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+   <div class="container mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
+       <header class="mb-8 text-center">
+           <h1 class="text-3xl md:text-4xl font-bold text-gray-800">DEMATEL 分析工具 (含因果圖)</h1>
+           <p class="text-gray-600 mt-2">上傳 Excel 檔案，進行 DEMATEL 分析、繪製因果圖並匯出結果。</p>
+       </header>
+
+       <section id="methodologySection" class="mb-8 p-6 border border-gray-200 rounded-lg bg-gray-50 content-text">
+           <h2 class="section-title">DEMATEL 演算法說明</h2>
+           <p><strong>DEMATEL（決策實驗室分析法）</strong> 主要用於分析複雜系統中多個因素間的因果關係，並以因果圖（Causal Diagram）將結果視覺化。以下為完整演算法步驟及因果圖繪製方法：</p>
+           
+           <hr class="my-4">
+
+           <h3 class="subsection-title">一、DEMATEL 演算法步驟</h3>
+           <ol class="list-decimal ml-6">
+               <li class="mb-2">
+                   <strong>建立直接關係矩陣（Initial Direct-Relation Matrix, $$S$$）</strong>
+                   <p>由專家對所有因素兩兩間的影響程度進行評分，常用 0~4 或 1~4 等等級（如：0=無影響，1=低度，2=中度，3=高度，4=極高度影響），自我影響設為 0。</p>
+               </li>
+               <li class="mb-2">
+                   <strong>正規化直接關係矩陣（Normalization）</strong>
+                   <p>將每個元素除以所有行元素和的最大值，得到正規化矩陣 $$X$$：</p>
+                   <p>$$ X = \frac{S}{\max_{i} \sum_{j} S_{ij}} $$</p>
+                   <p>確保所有元素值介於 0~1 之間。</p>
+               </li>
+               <li class="mb-2">
+                   <strong>計算總關係矩陣（Total-Relation Matrix, $$T$$）</strong>
+                   <p>利用下式計算總關係矩陣：</p>
+                   <p>$$ T = X (I - X)^{-1} $$</p>
+                   <p>其中 $$I$$ 為單位矩陣。$$T$$ 包含直接及所有間接影響。</p>
+               </li>
+               <li class="mb-2">
+                   <strong>計算各因素的影響度（D）與受影響度（R）</strong>
+                   <p>$$D_i$$：第 $$i$$ 行元素總和，表示因素 $$i$$ 對其他因素的總影響（row sum）。</p>
+                   <p>$$R_j$$：第 $$j$$ 列元素總和，表示因素 $$j$$ 被其他因素影響的總和（column sum）。</p>
+               </li>
+               <li class="mb-2">
+                   <strong>計算中心度（Prominence, $$D+R$$）與原因度（Relation, $$D-R$$）</strong>
+                   <p>中心度 $$D+R$$：表示該因素在系統中的重要性。</p>
+                   <p>原因度 $$D-R$$：若為正，屬於「原因」因素（Cause）；為負則屬於「結果」因素（Effect）。</p>
+               </li>
+               <li class="mb-3"> 
+                   <strong>（可選）設定臨界值（Threshold）</strong>
+                   <p>在 DEMATEL 分析中，臨界值是用來篩選全關係矩陣（Total-Relation Matrix, $$T$$）中顯著影響的標準。其目的是過濾掉影響力較弱的連結，讓因果圖（Causal Diagram）更加清晰、聚焦於主要關係，避免圖形過於複雜難以解讀。</p>
+                   
+                   <h4 class="h4-custom">臨界值的設定方式</h4>
+                   <p>常見的臨界值設定方法有：</p>
+                   <ul class="list-disc ml-6 mt-1">
+                       <li class="mb-1"><strong>平均值法：</strong>設定臨界值為 $$T$$ 矩陣所有元素的平均值。
+                           $$ \text{Threshold} = \frac{1}{n^2} \sum_{i=1}^{n} \sum_{j=1}^{n} T_{ij} $$
+                           只顯示 $$ T_{ij} > \text{Threshold} $$ 的關係線。
+                       </li>
+                       <li class="mb-1"><strong>中位數法：</strong>以 $$T$$ 矩陣所有元素的中位數作為臨界值。</li>
+                       <li class="mb-1"><strong>自訂百分位：</strong>例如設定在前 25% 或 50% 最大值的分界點作為臨界值。</li>
+                       <li class="mb-1"><strong>專家判斷法：</strong>由領域專家根據經驗選擇一個合適的數值。</li>
+                   </ul>
+                   
+                   <h4 class="h4-custom">實作流程建議</h4>
+                   <ul class="list-disc ml-6 mt-1">
+                       <li class="mb-1"><strong>計算臨界值：</strong>使用上述任一方式計算 $$T$$ 的臨界值。(本工具目前提供平均值、中位數及自訂選項)</li>
+                       <li class="mb-1"><strong>篩選關係：</strong>只保留 $$T_{ij} > \text{Threshold}$$ 的元素，並將這些關係繪製於因果圖上。(此功能為進階選項，目前圖表顯示所有點，關係線的繪製可基於此臨界值考量)</li>
+                       <li class="mb-1"><strong>簡化因果圖：</strong>這樣可以大幅減少線條數量，讓圖形聚焦於主要影響路徑。</li>
+                   </ul>
+               </li>
+           </ol>
+
+           <hr class="my-4">
+
+           <h3 class="subsection-title">二、因果圖繪製方法</h3>
+           <ul>
+               <li><strong>橫軸：中心度 $$D+R$$</strong></li>
+               <li><strong>縱軸：原因度 $$D-R$$</strong></li>
+               <li>每個因素在座標上以點表示，點的位置即為該因素的中心度與原因度。</li>
+               <li>圖表將為每個因素分配不同顏色，並提供圖例以茲識別。</li>
+               <li>可用箭頭或線條標示顯著（大於臨界值）的因果關係（此為進階繪圖功能）。</li>
+           </ul>
+           <blockquote>
+               <p class="pl-4 border-l-4 border-gray-300 italic">「繪製因果圖時，以中心度(D+R)為橫軸，原因度(D–R)為縱軸，構成一個座標圖形。正值偏向為原因類，負值偏向為結果類。」</p>
+           </blockquote>
+
+           <hr class="my-4">
+
+           <h3 class="subsection-title">三、前端實作建議（含因果圖繪製）</h3>
+           <ul>
+               <li><strong>矩陣計算：</strong> 可用 JavaScript 進行矩陣運算（如 math.js）。</li>
+               <li><strong>因果圖繪製：</strong> 建議使用 D3.js、Chart.js 或 Plotly.js，將每個因素以點標示於座標圖，橫軸為 $$D+R$$，縱軸為 $$D-R$$，並可用線條或箭頭連接因果關係強的因素。</li>
+               <li><strong>自動計算與繪圖流程：</strong>
+                   <ol class="list-decimal ml-6">
+                       <li>上傳 Excel 檔案，取得直接關係矩陣。</li>
+                       <li>完成 DEMATEL 計算後，將 $$D+R$$ 和 $$D-R$$ 結果傳給繪圖模組。</li>
+                       <li>動態生成因果圖，並可匯出圖片或結果。</li>
+                   </ol>
+               </li>
+           </ul>
+            <p class="text-sm mt-2 text-gray-600">註：本工具已包含上述前端實作的主要功能。</p>
+
+           <hr class="my-4">
+
+           <h3 class="subsection-title">四、參考 R 套件函數流程（供前端移植參考）</h3>
+           <ul>
+               <li><code>normalize()</code>：正規化直接關係矩陣</li>
+               <li><code>total_relationship_matrix()</code>：計算總關係矩陣</li>
+               <li><code>relationships_between_criteria()</code>：回傳各因素 $$D$$、$$R$$、$$D+R$$、$$D-R$$</li>
+               <li><code>visualize()</code>：繪製因果圖</li>
+           </ul>
+       </section>
+       <section id="uploadSection" class="mb-8 p-6 border border-gray-200 rounded-lg bg-gray-50">
+           <h2 class="section-title">步驟一：上傳直接關係矩陣 (Excel)</h2>
+           <div class="info-box">
+               <p class="text-sm text-gray-700">
+                   請上傳包含直接關係矩陣的 Excel 檔案 (.xlsx 或 .xls)。矩陣的第一列和第一行應為因素名稱，其餘為影響程度數值 (例如 0-4)。
+                   <br><strong>重要：</strong>因素對自身的影響 (對角線元素) 應為 0。
+               </p>
+           </div>
+           <div class="flex flex-col sm:flex-row items-center gap-4">
+               <input type="file" id="excelFile" accept=".xlsx,.xls" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2">
+               <button id="uploadButton" class="btn btn-primary w-full sm:w-auto">上傳並預覽</button>
+           </div>
+           <p id="fileName" class="mt-2 text-sm text-gray-500"></p>
+       </section>
+
+       <section id="matrixDisplaySection" class="mb-8 p-6 border border-gray-200 rounded-lg hidden">
+           <h2 class="section-title">步驟二：檢視與修正原始矩陣 (S)</h2>
+           <div class="info-box">
+               <p class="text-sm text-gray-700">
+                   請確認以下由 Excel 檔案讀取的直接關係矩陣。您可以在表格中直接修改數值。
+                   確認對角線元素為 0。
+               </p>
+           </div>
+           <div id="originalMatrixContainer" class="table-container"> 
+               </div>
+           <div class="flex flex-col sm:flex-row gap-4 mt-4"> 
+               <button id="confirmMatrixButton" class="btn btn-primary">確認矩陣並計算</button>
+               <button id="reUploadButton" class="btn btn-secondary">重新上傳檔案</button>
+           </div>
+       </section>
+
+       <section id="resultsSection" class="mb-8 p-6 border border-gray-200 rounded-lg hidden">
+           <h2 class="section-title">步驟三：DEMATEL 分析結果</h2>
+
+           <div class="mb-6">
+               <h3 class="text-xl font-semibold text-gray-700 mb-2">1. 正規化矩陣 (Normalized Matrix, X)</h3>
+               <div id="normalizedMatrixContainer" class="table-container"></div>
+           </div>
+
+           <div class="mb-6">
+               <h3 class="text-xl font-semibold text-gray-700 mb-2">2. 全關係矩陣 (Total Relationship Matrix, T)</h3>
+               <div id="totalRelationshipMatrixContainer" class="table-container"></div>
+           </div>
+
+           <div class="mb-6">
+               <h3 class="text-xl font-semibold text-gray-700 mb-2">3. 各項指標 (D, R, D+R, D-R)</h3>
+               <div id="indicatorsContainer" class="table-container"></div>
+           </div>
+
+           <div class="mb-6">
+               <h3 class="text-xl font-semibold text-gray-700 mb-2">4. 設定臨界值 (Threshold) - 用於影響關係分析</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 items-center">
+                   <div>
+                       <label for="thresholdType" class="block text-sm font-medium text-gray-700">臨界值計算方式:</label>
+                       <select id="thresholdType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                           <option value="average" selected>平均值 (Average)</option>
+                           <option value="median">中位數 (Median)</option>
+                           <option value="custom">自訂 (Custom)</option>
+                       </select>
+                   </div>
+                   <div id="customThresholdInputContainer" class="hidden">
+                       <label for="customThresholdValue" class="block text-sm font-medium text-gray-700">自訂臨界值:</label>
+                       <input type="number" id="customThresholdValue" step="0.001" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="手動輸入數值">
+                   </div>
+               </div>
+               <p class="text-xs text-gray-500 mt-1">
+                   選擇臨界值的計算方式或手動輸入。臨界值主要用於分析時識別哪些因素間的影響程度較為顯著，進而簡化因果圖中的關係線（進階繪圖功能待擴展）。
+               </p>
+               <p id="calculatedThresholdDisplay" class="text-sm font-medium text-gray-700 mt-2"></p>
+           </div>
+
+           <div class="mb-6">
+               <h3 class="text-xl font-semibold text-gray-700 mb-2">5. 因果關係圖 (Causal Diagram)</h3>
+               <div id="causalDiagramContainer" class="bg-gray-50 p-4 rounded-md min-h-[450px] flex items-center justify-center"> 
+                   <canvas id="causalDiagramCanvas"></canvas>
+               </div>
+               <p id="causalDiagramMessage" class="text-center text-gray-500 mt-2"></p>
+           </div>
+
+           <div class="flex flex-col sm:flex-row gap-4 mt-6">
+               <button id="exportResultsButton" class="btn btn-success">匯出所有結果至 Excel</button>
+               <button id="analyzeNewButton" class="btn btn-secondary">分析新檔案 (清空目前)</button>
+           </div>
+       </section>
+
+       <div id="messageBox" class="fixed top-5 right-5 bg-red-500 text-white p-4 rounded-lg shadow-md hidden animate-pulse z-50">
+           <p id="messageText"></p>
+       </div>
+   </div>
+
+   <script>
+       // DOM 元素獲取
+       const excelFileInput = document.getElementById('excelFile');
+       const uploadButton = document.getElementById('uploadButton');
+       const fileNameDisplay = document.getElementById('fileName');
+       const matrixDisplaySection = document.getElementById('matrixDisplaySection');
+       const originalMatrixContainer = document.getElementById('originalMatrixContainer');
+       const confirmMatrixButton = document.getElementById('confirmMatrixButton');
+       const reUploadButton = document.getElementById('reUploadButton');
+       const resultsSection = document.getElementById('resultsSection');
+       const normalizedMatrixContainer = document.getElementById('normalizedMatrixContainer');
+       const totalRelationshipMatrixContainer = document.getElementById('totalRelationshipMatrixContainer');
+       const indicatorsContainer = document.getElementById('indicatorsContainer');
+       
+       const thresholdTypeSelect = document.getElementById('thresholdType');
+       const customThresholdInputContainer = document.getElementById('customThresholdInputContainer');
+       const customThresholdValueInput = document.getElementById('customThresholdValue');
+       const calculatedThresholdDisplay = document.getElementById('calculatedThresholdDisplay');
+
+       const causalDiagramCanvas = document.getElementById('causalDiagramCanvas');
+       const causalDiagramMessage = document.getElementById('causalDiagramMessage');
+       const exportResultsButton = document.getElementById('exportResultsButton');
+       const analyzeNewButton = document.getElementById('analyzeNewButton');
+       const messageBox = document.getElementById('messageBox');
+       const messageText = document.getElementById('messageText');
+
+       // 儲存矩陣資料的變數
+       let factors = []; 
+       let originalMatrix_S = []; 
+       let normalizedMatrix_X = []; 
+       let totalRelationshipMatrix_T = []; 
+       let D_values = []; 
+       let R_values = []; 
+       let D_plus_R = []; 
+       let D_minus_R = []; 
+       let currentThresholdValue = null; 
+       let causalChart = null; 
+
+       // 圖表顏色配置 (可擴充更多顏色)
+       const chartColors = [
+           'rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)',
+           'rgba(75, 192, 192, 0.8)', 'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)',
+           'rgba(199, 199, 199, 0.8)', 'rgba(83, 102, 255, 0.8)', 'rgba(40, 159, 64, 0.8)',
+           'rgba(210, 99, 132, 0.8)', 'rgba(0, 206, 209, 0.8)', 'rgba(255, 138, 101, 0.8)',
+           'rgba(100, 181, 246, 0.8)', 'rgba(255, 241, 118, 0.8)', 'rgba(129, 199, 132, 0.8)',
+           'rgba(179, 157, 219, 0.8)', 'rgba(255, 183, 77, 0.8)', 'rgba(144, 164, 174, 0.8)'
+       ]; // 擴增顏色選項
+
+
+       // --- 檔案上傳與解析 ---
+       uploadButton.addEventListener('click', handleFileUpload);
+       excelFileInput.addEventListener('change', (event) => {
+           const file = event.target.files[0];
+           if (file) {
+               fileNameDisplay.textContent = `已選擇檔案：${file.name}`;
+           } else {
+               fileNameDisplay.textContent = '';
+           }
+       });
+
+       function handleFileUpload() {
+           const file = excelFileInput.files[0];
+           if (!file) {
+               showMessage("請先選擇一個 Excel 檔案。");
+               return;
+           }
+
+           const reader = new FileReader();
+           reader.onload = function(event) {
+               try {
+                   const data = new Uint8Array(event.target.result);
+                   const workbook = XLSX.read(data, { type: 'array' });
+                   const firstSheetName = workbook.SheetNames[0];
+                   const worksheet = workbook.Sheets[firstSheetName];
+                   const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                   if (jsonData.length < 2) { // 至少需要表頭和一行數據
+                       showMessage("Excel 檔案格式錯誤：至少需要包含因素名稱列和一行影響數據。");
+                       return;
+                   }
+
+                   // 解析因素名稱 (第一列，從第二個元素開始)
+                   factors = jsonData[0].slice(1).map(String).filter(f => f && f.trim() !== ""); 
+                   
+                   // 解析原始矩陣數據 (從第二列開始，每行從第二個元素開始)
+                   originalMatrix_S = jsonData.slice(1)
+                                       // 過濾掉完全為空的數據列 (基於因素數量)
+                                       .filter(row => row.slice(1, factors.length + 1).some(cell => cell !== null && cell !== undefined && cell !== "")) 
+                                       .map(row => row.slice(1, factors.length + 1).map(cell => {
+                                           const num = Number(cell);
+                                           // 如果轉換失敗或非數字，預設為0，或可提示更詳細錯誤
+                                           return isNaN(num) ? 0 : num; 
+                                       }));
+                   
+                   if (factors.length === 0 ) {
+                        showMessage("Excel 檔案格式錯誤：未能解析到有效的因素名稱。請確保第一行包含因素名稱。");
+                        return;
+                   }
+                   // 確保即使因素名稱存在，數據行也存在
+                   if (originalMatrix_S.length === 0 && factors.length > 0) {
+                       showMessage("Excel 檔案格式錯誤：未能解析到有效的數據。請確保因素名稱下方有對應的影響值。");
+                       return;
+                   }
+
+
+                   // 驗證矩陣維度是否與因素數量一致
+                   if (originalMatrix_S.length !== factors.length || originalMatrix_S.some(row => row.length !== factors.length)) {
+                       showMessage(`Excel 檔案格式錯誤：因素數量 (${factors.length}) 與數據矩陣維度 (${originalMatrix_S.length}x${originalMatrix_S[0] ? originalMatrix_S[0].length : 0}) 不符。請確保資料為方陣且與因素數量一致。`);
+                       factors = []; // 清空以防後續錯誤
+                       originalMatrix_S = [];
+                       return;
+                   }
+                   
+                   // 檢查對角線元素及 NaN 值
+                   let diagonalOk = true;
+                   for (let i = 0; i < originalMatrix_S.length; i++) {
+                       if (originalMatrix_S[i][i] !== 0) {
+                           diagonalOk = false;
+                       }
+                       for (let j = 0; j < originalMatrix_S[i].length; j++) {
+                           if (isNaN(originalMatrix_S[i][j])) {
+                               // jsonData[i+1] 是 Excel 中的行，jsonData[i+1][j+1] 是對應的儲存格
+                               showMessage(`錯誤：矩陣中因素 "${factors[i]}" 對因素 "${factors[j]}" 的影響值 ("${jsonData[i+1]?.[j+1]}") 不是一個有效的數字。已暫時視為0，請修正檔案。`);
+                               originalMatrix_S[i][j] = 0; // 修正為0避免後續計算NaN
+                           }
+                       }
+                   }
+                   if (!diagonalOk) {
+                        showMessage("警告：直接關係矩陣的對角線元素應為 0。請檢查並修正資料，或確認後系統將以0計算。", "warn");
+                   }
+
+                   displayMatrix(originalMatrixContainer, originalMatrix_S, factors, true, "S");
+                   matrixDisplaySection.classList.remove('hidden');
+                   resultsSection.classList.add('hidden'); // 計算完成後才顯示結果
+                   fileNameDisplay.textContent = `已載入檔案：${file.name}`;
+                    if (causalChart) { // 如果舊圖表存在，則銷毀
+                       causalChart.destroy();
+                       causalChart = null;
+                   }
+                   causalDiagramMessage.textContent = ""; // 清空圖表訊息
+                   calculatedThresholdDisplay.textContent = ""; // 清空上次計算的臨界值
+               } catch (error) {
+                   console.error("檔案解析錯誤:", error);
+                   showMessage("檔案解析失敗，請確認檔案格式是否正確。錯誤：" + error.message);
+                   matrixDisplaySection.classList.add('hidden');
+               }
+           };
+           reader.onerror = function(error) {
+               console.error("檔案讀取錯誤:", error);
+               showMessage("檔案讀取時發生錯誤。");
+           };
+           reader.readAsArrayBuffer(file);
+       }
+
+       // --- 顯示矩陣 ---
+       function displayMatrix(container, matrix, labels, editable = false, matrixName = "") {
+           container.innerHTML = ''; // 清空容器
+           if (!matrix || matrix.length === 0 || !labels || labels.length === 0) {
+               container.innerHTML = '<p class="text-gray-500 p-4">沒有資料可顯示。</p>';
+               return;
+           }
+
+           const table = document.createElement('table');
+           const thead = document.createElement('thead');
+           const tbody = document.createElement('tbody');
+
+           // 建立表頭
+           let headerRowHTML = `<tr><th>${matrixName}</th>`; // 左上角儲存格
+           labels.forEach(label => headerRowHTML += `<th>${label}</th>`);
+           headerRowHTML += '</tr>';
+           thead.innerHTML = headerRowHTML;
+
+           // 建立表格主體
+           let tbodyHTML = '';
+           matrix.forEach((row, i) => {
+               // 確保 labels[i] 存在
+               const rowLabel = labels[i] !== undefined ? labels[i] : `因素 ${i+1}`;
+               tbodyHTML += `<tr><th>${rowLabel}</th>`; // 每行的第一個儲存格 (因素名稱)
+               row.forEach((cell, j) => {
+                   if (editable) {
+                       tbodyHTML += `<td><input type="number" value="${cell}" data-row="${i}" data-col="${j}" class="matrix-input"></td>`;
+                   } else {
+                       tbodyHTML += `<td>${typeof cell === 'number' ? (isNaN(cell) ? "N/A" : cell.toFixed(4)) : cell}</td>`;
+                   }
+               });
+               tbodyHTML += '</tr>';
+           });
+           tbody.innerHTML = tbodyHTML;
+
+           table.appendChild(thead);
+           table.appendChild(tbody);
+           container.appendChild(table);
+
+           // 如果可編輯，為輸入框添加事件監聽器
+           if (editable) {
+               document.querySelectorAll('.matrix-input').forEach(input => {
+                   input.addEventListener('change', (e) => {
+                       const r = parseInt(e.target.dataset.row);
+                       const c = parseInt(e.target.dataset.col);
+                       const value = parseFloat(e.target.value);
+                       if (!isNaN(value)) {
+                           originalMatrix_S[r][c] = value;
+                           // 提醒對角線應為0
+                           if (r === c && value !== 0) {
+                               showMessage(`提醒：對角線元素 (${factors[r]}) 已被修改為 ${value}，DEMATEL 要求對角線為0。`, "info");
+                           }
+                       } else {
+                           showMessage("輸入值無效，請輸入數字。");
+                           e.target.value = originalMatrix_S[r][c]; // 回復舊值
+                       }
+                   });
+               });
+           }
+       }
+
+       // --- 確認矩陣並執行 DEMATEL 計算 ---
+       confirmMatrixButton.addEventListener('click', () => {
+           if (originalMatrix_S.length === 0) {
+               showMessage("沒有有效的矩陣資料可以計算。");
+               return;
+           }
+           // 強制對角線為0 (根據DEMATEL標準)
+           let diagonalCorrected = false;
+           for (let i = 0; i < originalMatrix_S.length; i++) {
+               if (originalMatrix_S[i][i] !== 0) {
+                    if (!diagonalCorrected) { // 只顯示一次總的修正訊息
+                       showMessage(`注意：部分或所有對角線值非0，已自動設為 0 以符合 DEMATEL 計算要求。`, "info");
+                       diagonalCorrected = true;
+                    }
+                    originalMatrix_S[i][i] = 0;
+               }
+           }
+           if (diagonalCorrected) {
+               // 更新顯示的原始矩陣，以反映強制設為0的對角線
+               displayMatrix(originalMatrixContainer, originalMatrix_S, factors, true, "S"); 
+           }
+
+           performDematelCalculations(); // 執行核心計算
+           // 根據計算結果決定是否顯示結果區和圖表
+           if (totalRelationshipMatrix_T && totalRelationshipMatrix_T.length > 0 && !totalRelationshipMatrix_T.flat().some(isNaN)) {
+                resultsSection.classList.remove('hidden');
+                showMessage("DEMATEL 計算完成！", "success");
+                updateThresholdValue(); // 計算並設定臨界值
+                drawCausalDiagram(factors, D_plus_R, D_minus_R); // 繪製因果圖
+           } else {
+               // 如果計算失敗，結果區可能不應完全顯示，或顯示部分錯誤信息
+               resultsSection.classList.remove('hidden'); // 仍然顯示結果區，但圖表和部分表格可能為空或提示錯誤
+               normalizedMatrixContainer.innerHTML = '<p class="text-red-500 p-4">正規化矩陣計算失敗或包含無效數據。</p>';
+               totalRelationshipMatrixContainer.innerHTML = '<p class="text-red-500 p-4">全關係矩陣計算失敗或包含無效數據。</p>';
+               indicatorsContainer.innerHTML = '<p class="text-red-500 p-4">指標計算失敗。</p>';
+               causalDiagramMessage.textContent = "因數據問題，無法繪製因果圖。";
+               calculatedThresholdDisplay.textContent = "無法計算臨界值";
+                if (causalChart) { causalChart.destroy(); causalChart = null; } // 銷毀舊圖表
+           }
+       });
+
+       // --- DEMATEL 計算邏輯 (核心演算法) ---
+       function performDematelCalculations() {
+           if (originalMatrix_S.length === 0) return; // 防呆
+           const n = originalMatrix_S.length;
+
+           // 1. 正規化直接關係矩陣 (X = S / max(rowSum(S)))
+           try {
+               const rowSums = originalMatrix_S.map(row => row.reduce((sum, val) => sum + val, 0));
+               const maxRowSum = Math.max(...rowSums);
+
+               if (maxRowSum === 0 && originalMatrix_S.flat().every(val => val === 0)) {
+                    // 如果所有元素都是0，正規化結果也是全0
+                    showMessage("注意：原始矩陣所有元素均為零。正規化結果將為全零矩陣。", "warn");
+                    normalizedMatrix_X = originalMatrix_S.map(row => row.map(() => 0));
+               } else if (maxRowSum === 0) { // 行和最大為0，但並非所有元素為0 (例如有負值，雖然DEMATEL通常不用負值)
+                   showMessage("錯誤：原始矩陣行和的最大值為零（但並非所有元素都為零），無法進行標準正規化。請檢查數據。", "error");
+                   normalizedMatrix_X = originalMatrix_S.map(row => row.map(() => NaN)); // 標記為NaN
+               } else if (maxRowSum < 0) { // 不應出現的情況
+                    showMessage("錯誤：原始矩陣行和的最大值為負數，不符合DEMATEL影響程度定義。請檢查數據。", "error");
+                   normalizedMatrix_X = originalMatrix_S.map(row => row.map(() => NaN));
+               }
+                else {
+                   normalizedMatrix_X = originalMatrix_S.map(row =>
+                       row.map(cell => cell / maxRowSum)
+                   );
+               }
+           } catch (e) {
+               showMessage(`正規化計算錯誤: ${e.message}`, "error");
+               normalizedMatrix_X = []; // 清空以防止後續錯誤
+               totalRelationshipMatrix_T = []; // 同樣清空
+           }
+           displayMatrix(normalizedMatrixContainer, normalizedMatrix_X, factors, false, "X");
+
+           // 2. 計算總關係矩陣 (T = X * (I - X)^-1)
+           if (normalizedMatrix_X.length > 0 && !normalizedMatrix_X.flat().some(isNaN)) { // 確保正規化成功
+               try {
+                   const I = math.identity(n).toArray(); // 單位矩陣
+                   const I_minus_X = math.subtract(I, normalizedMatrix_X);
+                   
+                   // 檢查 I_minus_X 是否奇異或接近奇異
+                   const det_I_minus_X = math.det(I_minus_X);
+                   if (Math.abs(det_I_minus_X) < 1e-9) { // 1e-9 是一個小的容限值
+                        showMessage("警告：(I-X) 矩陣的行列式 (" + det_I_minus_X.toExponential(3) + ") 接近於零，可能為奇異矩陣。逆矩陣結果可能不穩定或不準確。", "warn");
+                   }
+                   
+                   // 嘗試計算逆矩陣，即使行列式接近0
+                   const I_minus_X_inv = math.inv(I_minus_X);
+                   totalRelationshipMatrix_T = math.multiply(normalizedMatrix_X, I_minus_X_inv);
+
+                   // 檢查 T 矩陣是否有 NaN 或 Infinity
+                   if (totalRelationshipMatrix_T.some(row => row.some(val => isNaN(val) || !isFinite(val)))) {
+                       showMessage("錯誤：計算出的全關係矩陣 T 包含無效值 (NaN/Infinity)。這通常意味著 (I-X) 矩陣不可逆或計算不穩定。請檢查原始數據的合理性，例如是否存在過強的循環依賴或數據輸入問題。", "error");
+                        totalRelationshipMatrix_T = normalizedMatrix_X.map(row => row.map(() => NaN)); // 標記為NaN
+                   }
+
+               } catch (error) { // math.inv 可能會拋出錯誤
+                   console.error("計算全關係矩陣 T 時出錯:", error);
+                   showMessage(`計算全關係矩陣 T 失敗: ${error.message}. (I-X)可能不可逆。請檢查原始數據。`, "error");
+                   totalRelationshipMatrix_T = normalizedMatrix_X.map(row => row.map(() => NaN)); // 標記為NaN
+               }
+           } else {
+                totalRelationshipMatrix_T = []; // 如果正規化失敗，也清空T
+                if (normalizedMatrix_X.flat().some(isNaN)) { // 如果正規化結果是NaN
+                    showMessage("由於正規化失敗，無法計算全關係矩陣 T。", "error");
+                }
+           }
+           displayMatrix(totalRelationshipMatrixContainer, totalRelationshipMatrix_T, factors, false, "T");
+
+           // 3. 計算各項指標 (D, R, D+R, D-R)
+           calculateAndDisplayIndicators(totalRelationshipMatrix_T);
+           // 臨界值相關的更新移至 updateThresholdValue() 並在 confirmMatrixButton 的事件處理中調用
+       }
+
+       // --- 計算並顯示指標 ---
+       function calculateAndDisplayIndicators(matrixT) {
+           if (!matrixT || matrixT.length === 0 || matrixT.flat().some(isNaN)) {
+               indicatorsContainer.innerHTML = '<p class="text-red-500 p-4">無法計算指標，全關係矩陣 T 包含無效數據或計算失敗。</p>';
+               D_values = []; R_values = []; D_plus_R = []; D_minus_R = [];
+               return;
+           }
+           const n = matrixT.length;
+
+           // 計算 D (影響度 - Row sums)
+           D_values = matrixT.map(row => row.reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0)); 
+           // 計算 R (受影響度 - Column sums)
+           R_values = math.transpose(matrixT).map(col => col.reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0));
+
+
+           // 計算 D+R (中心度) 和 D-R (原因度)
+           D_plus_R = D_values.map((d, i) => d + R_values[i]);
+           D_minus_R = D_values.map((d, i) => d - R_values[i]);
+
+           // 顯示指標表格
+           const indicatorsTable = document.createElement('table');
+           // indicatorsTable.className = 'w-full text-sm text-left text-gray-500'; // Class is applied by .table-container table
+           let tableHTML = `<thead><tr class="text-xs text-gray-700 uppercase bg-gray-50">
+                               <th>因素</th>
+                               <th>影響度 (D)</th>
+                               <th>受影響度 (R)</th>
+                               <th>中心度 (D+R)</th>
+                               <th>原因度 (D-R)</th>
+                            </tr></thead><tbody>`;
+
+           factors.forEach((factor, i) => {
+               tableHTML += `<tr>
+                               <th>${factor}</th>
+                               <td>${D_values[i].toFixed(4)}</td>
+                               <td>${R_values[i].toFixed(4)}</td>
+                               <td>${D_plus_R[i].toFixed(4)}</td>
+                               <td>${D_minus_R[i].toFixed(4)}</td>
+                             </tr>`;
+           });
+           tableHTML += `</tbody>`;
+           indicatorsTable.innerHTML = tableHTML;
+           indicatorsContainer.innerHTML = ''; // 清空舊表格
+           indicatorsContainer.appendChild(indicatorsTable);
+       }
+
+       // --- 臨界值處理 ---
+       thresholdTypeSelect.addEventListener('change', function() {
+           if (this.value === 'custom') {
+               customThresholdInputContainer.classList.remove('hidden');
+               customThresholdValueInput.value = ''; // 清空自訂輸入
+               calculatedThresholdDisplay.textContent = '請輸入自訂臨界值'; 
+               currentThresholdValue = null; // 清除舊的自訂值
+           } else {
+               customThresholdInputContainer.classList.add('hidden');
+               updateThresholdValue(); // 當選擇非自訂時，重新計算並顯示
+           }
+            // 如果圖表已存在，可以考慮重繪 (如果臨界值影響圖表外觀)
+           if (causalChart && factors.length > 0 && D_plus_R.length > 0 && D_minus_R.length > 0) {
+               // drawCausalDiagram(factors, D_plus_R, D_minus_R); // 目前臨界值不直接影響點的繪製
+           }
+       });
+
+       customThresholdValueInput.addEventListener('input', function() { // 'input' 事件即時更新
+           if (thresholdTypeSelect.value === 'custom') {
+               const val = parseFloat(this.value);
+               if (!isNaN(val)) {
+                   currentThresholdValue = val;
+                   calculatedThresholdDisplay.textContent = `目前使用自訂臨界值: ${currentThresholdValue.toFixed(4)}`;
+               } else {
+                   currentThresholdValue = null;
+                   calculatedThresholdDisplay.textContent = `自訂臨界值無效`;
+               }
+                // 如果圖表已存在，可以考慮重繪
+               if (causalChart && factors.length > 0 && D_plus_R.length > 0 && D_minus_R.length > 0) {
+                   // drawCausalDiagram(factors, D_plus_R, D_minus_R);
+               }
+           }
+       });
+       
+       // 更新和顯示臨界值的函數
+       function updateThresholdValue() {
+           if (!totalRelationshipMatrix_T || totalRelationshipMatrix_T.length === 0 || totalRelationshipMatrix_T.flat().some(isNaN)) {
+               calculatedThresholdDisplay.textContent = "無法計算臨界值 (T矩陣無效)";
+               currentThresholdValue = null;
+               return;
+           }
+
+           const allValues = totalRelationshipMatrix_T.flat().filter(v => !isNaN(v) && isFinite(v) && v !== null); // 確保值有效
+           if (allValues.length === 0) {
+               calculatedThresholdDisplay.textContent = "無法計算臨界值 (T矩陣無有效數據)";
+               currentThresholdValue = null;
+               return;
+           }
+
+           const type = thresholdTypeSelect.value;
+           let threshold;
+           let displayText = "計算方式: ";
+
+           if (type === 'average') {
+               threshold = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+               displayText += `平均值 = ${threshold.toFixed(4)}`;
+           } else if (type === 'median') {
+               const sortedValues = [...allValues].sort((a, b) => a - b); // 排序
+               const mid = Math.floor(sortedValues.length / 2);
+               threshold = sortedValues.length % 2 !== 0 ? sortedValues[mid] : (sortedValues[mid - 1] + sortedValues[mid]) / 2;
+               displayText += `中位數 = ${threshold.toFixed(4)}`;
+           } else if (type === 'custom') {
+               const customVal = parseFloat(customThresholdValueInput.value);
+               if (!isNaN(customVal)) {
+                   threshold = customVal;
+                   displayText = `目前使用自訂臨界值: ${threshold.toFixed(4)}`;
+               } else {
+                   displayText = "自訂臨界值無效，請輸入數字";
+                   currentThresholdValue = null; // 設為 null 表示無效
+                   calculatedThresholdDisplay.textContent = displayText;
+                   return; // 不更新 currentThresholdValue
+               }
+           } else { // 理論上不會執行到這裡
+                displayText = "未選擇計算方式";
+                threshold = null;
+           }
+           currentThresholdValue = threshold;
+           calculatedThresholdDisplay.textContent = displayText;
+       }
+
+
+       // --- 繪製因果圖 ---
+       function drawCausalDiagram(labels, dPlusRData, dMinusRData) {
+           if (causalChart) { // 銷毀舊圖表實例
+               causalChart.destroy(); 
+           }
+           // 檢查數據有效性
+           if (!labels || !dPlusRData || !dMinusRData || labels.length === 0 || dPlusRData.length !== labels.length || dMinusRData.length !== labels.length || dPlusRData.some(isNaN) || dMinusRData.some(isNaN)) {
+               causalDiagramMessage.textContent = "因數據不足或計算錯誤，無法繪製因果圖。";
+               causalDiagramCanvas.style.display = 'none'; // 隱藏canvas
+               return;
+           }
+           causalDiagramCanvas.style.display = 'block'; // 顯示canvas
+           causalDiagramMessage.textContent = ""; // 清空訊息
+
+           // 為每個因素創建一個獨立的 dataset 以便在圖例中顯示不同顏色
+           const datasets = labels.map((label, index) => {
+               return {
+                   label: label, // 用於圖例
+                   data: [{
+                       x: dPlusRData[index],
+                       y: dMinusRData[index],
+                       factorLabel: label // 用於 tooltip，儲存原始標籤
+                   }],
+                   backgroundColor: chartColors[index % chartColors.length], // 循環使用顏色
+                   borderColor: chartColors[index % chartColors.length], // 邊框顏色與背景一致
+                   borderWidth: 1,
+                   pointRadius: 7, 
+                   pointHoverRadius: 9,
+                   pointStyle: 'circle' // 確保圖例是圓點
+               };
+           });
+
+           const data = {
+               datasets: datasets
+           };
+
+           const config = {
+               type: 'scatter',
+               data: data,
+               options: {
+                   responsive: true,
+                   maintainAspectRatio: false, 
+                   scales: {
+                       x: {
+                           type: 'linear',
+                           position: 'bottom',
+                           title: {
+                               display: true,
+                               text: '中心度 (D+R) Prominence',
+                               font: { size: 14 }
+                           }
+                       },
+                       y: {
+                           type: 'linear',
+                           position: 'left',
+                           title: {
+                               display: true,
+                               text: '原因度 (D-R) Relation',
+                               font: { size: 14 }
+                           }
+                       }
+                   },
+                   plugins: {
+                       legend: {
+                           display: true,
+                           position: 'right', // 將圖例放在右側
+                            labels: {
+                               usePointStyle: true, // 圖例使用點的樣式
+                               padding: 15, // 圖例項之間的間距
+                               font: {
+                                   size: 11
+                               }
+                           }
+                       },
+                       tooltip: {
+                           callbacks: {
+                               label: function(context) {
+                                   // context.raw.factorLabel 是我們在 data 中為每個點添加的自訂屬性
+                                   let label = context.dataset.data[0].factorLabel || '';
+                                   if (label) {
+                                       label += ': ';
+                                   }
+                                   label += `(D+R: ${context.parsed.x.toFixed(3)}, D-R: ${context.parsed.y.toFixed(3)})`;
+                                   return label;
+                               }
+                           }
+                       }
+                   },
+               }
+           };
+           causalChart = new Chart(causalDiagramCanvas, config);
+       }
+
+       // --- 其他按鈕事件 ---
+       reUploadButton.addEventListener('click', () => {
+           // 重設所有相關的 DOM 元素和變數
+           excelFileInput.value = ''; // 清空檔案選擇
+           fileNameDisplay.textContent = '';
+           matrixDisplaySection.classList.add('hidden');
+           resultsSection.classList.add('hidden');
+           originalMatrixContainer.innerHTML = '';
+           normalizedMatrixContainer.innerHTML = '';
+           totalRelationshipMatrixContainer.innerHTML = '';
+           indicatorsContainer.innerHTML = '';
+           
+           // 重設臨界值相關
+           thresholdTypeSelect.value = 'average'; // 重設為預設值
+           customThresholdInputContainer.classList.add('hidden');
+           customThresholdValueInput.value = '';
+           calculatedThresholdDisplay.textContent = '';
+           currentThresholdValue = null;
+
+           // 清空數據變數
+           factors = [];
+           originalMatrix_S = [];
+           normalizedMatrix_X = [];
+           totalRelationshipMatrix_T = [];
+           D_values = []; R_values = []; D_plus_R = []; D_minus_R = [];
+           
+           if (causalChart) { // 銷毀圖表
+               causalChart.destroy();
+               causalChart = null;
+           }
+           causalDiagramMessage.textContent = "";
+           causalDiagramCanvas.style.display = 'none';
+           showMessage("請重新上傳檔案。", "info");
+       });
+
+       analyzeNewButton.addEventListener('click', () => {
+           reUploadButton.click(); // 觸發重新上傳的邏輯
+       });
+
+       // --- 結果匯出 ---
+       exportResultsButton.addEventListener('click', () => {
+           if (factors.length === 0) {
+               showMessage("沒有可匯出的結果。");
+               return;
+           }
+
+           try {
+               const wb = XLSX.utils.book_new(); // 建立新的工作簿
+               // 格式化數字的輔助函數
+               const formatNumber = (val) => (typeof val === 'number' && !isNaN(val) && isFinite(val)) ? val.toFixed(4) : (isNaN(val) ? "計算錯誤" : (val === undefined || val === null ? "" : val) );
+
+               // 1. 原始矩陣 S
+               if (originalMatrix_S.length > 0) {
+                   const ws_data_s = [
+                       ['原始關係矩陣 S', ...factors], // 表頭
+                       ...originalMatrix_S.map((row, i) => [factors[i], ...row.map(cell => (typeof cell === 'number' && !isNaN(cell)) ? cell : cell )]) // 數據
+                   ];
+                   const ws_s = XLSX.utils.aoa_to_sheet(ws_data_s);
+                   XLSX.utils.book_append_sheet(wb, ws_s, "1. 原始關係矩陣S");
+               }
+
+               // 2. 正規化矩陣 X
+               if (normalizedMatrix_X.length > 0) {
+                   const ws_data_x = [
+                       ['正規化矩陣 X', ...factors],
+                       ...normalizedMatrix_X.map((row, i) => [factors[i], ...row.map(formatNumber)])
+                   ];
+                   const ws_x = XLSX.utils.aoa_to_sheet(ws_data_x);
+                   XLSX.utils.book_append_sheet(wb, ws_x, "2. 正規化矩陣X");
+               }
+
+               // 3. 全關係矩陣 T
+               if (totalRelationshipMatrix_T.length > 0) {
+                   const ws_data_t = [
+                       ['全關係矩陣 T', ...factors],
+                       ...totalRelationshipMatrix_T.map((row, i) => [factors[i], ...row.map(formatNumber)])
+                   ];
+                   const ws_t = XLSX.utils.aoa_to_sheet(ws_data_t);
+                   XLSX.utils.book_append_sheet(wb, ws_t, "3. 全關係矩陣T");
+               }
+
+               // 4. 指標
+               if (D_values.length > 0) {
+                   const indicatorsData = [
+                       ['因素', '影響度 (D)', '受影響度 (R)', '中心度 (D+R)', '原因度 (D-R)'],
+                       ...factors.map((factor, i) => [
+                           factor,
+                           formatNumber(D_values[i]),
+                           formatNumber(R_values[i]),
+                           formatNumber(D_plus_R[i]),
+                           formatNumber(D_minus_R[i])
+                       ])
+                   ];
+                   const ws_indicators = XLSX.utils.aoa_to_sheet(indicatorsData);
+                   XLSX.utils.book_append_sheet(wb, ws_indicators, "4. 各項指標");
+               }
+
+               // 5. 臨界值
+               let thresholdToExportDisplayValue;
+               let thresholdTypeToExport = thresholdTypeSelect.options[thresholdTypeSelect.selectedIndex].text;
+
+               if (currentThresholdValue === null || isNaN(currentThresholdValue)) {
+                   if (thresholdTypeSelect.value === 'custom' && customThresholdValueInput.value.trim() === '') {
+                       thresholdToExportDisplayValue = "自訂值未輸入";
+                   } else if (thresholdTypeSelect.value === 'custom' && isNaN(parseFloat(customThresholdValueInput.value))) {
+                       thresholdToExportDisplayValue = "自訂值無效";
+                   } else { // For average/median if they failed, or custom if input was bad from start
+                       thresholdToExportDisplayValue = "未計算/計算失敗";
+                   }
+               } else {
+                   thresholdToExportDisplayValue = formatNumber(currentThresholdValue); // Format if it's a valid number
+               }
+               
+               const ws_data_threshold = [['參數', '數值'], [`臨界值計算方式 (${thresholdTypeToExport})`, thresholdToExportDisplayValue]];
+               const ws_threshold = XLSX.utils.aoa_to_sheet(ws_data_threshold);
+               XLSX.utils.book_append_sheet(wb, ws_threshold, "5. 臨界值");
+               
+               // 產生 Excel 檔案並觸發下載
+               const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+               const dataBlob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" });
+               saveAs(dataBlob, "DEMATEL分析結果.xlsx");
+               showMessage("結果已成功匯出為 Excel 檔案。", "success");
+
+           } catch (error) {
+               console.error("匯出 Excel 失敗:", error);
+               showMessage("匯出 Excel 失敗：" + error.message);
+           }
+       });
+
+       // --- 訊息提示 ---
+       let messageTimeout;
+       function showMessage(message, type = "error") { // types: error, success, info, warn
+           messageText.textContent = message;
+           // 重設樣式，移除所有可能的背景色和 hidden
+           messageBox.className = 'fixed top-5 right-5 text-white p-4 rounded-lg shadow-md animate-pulse z-50'; 
+
+           if (type === "success") {
+               messageBox.classList.add('bg-green-500');
+           } else if (type === "info") {
+               messageBox.classList.add('bg-blue-500');
+           } else if (type === "warn" || type === "warning") { 
+                messageBox.classList.add('bg-yellow-500', 'text-black'); // 黃色背景配黑色文字
+           } else { // default to error
+               messageBox.classList.add('bg-red-500');
+           }
+           messageBox.classList.remove('hidden'); // 確保訊息框可見
+
+
+           clearTimeout(messageTimeout); // 清除之前的計時器
+           messageTimeout = setTimeout(() => {
+               messageBox.classList.add('hidden');
+           }, 5000); // 5 秒後自動隱藏
+       }
+
+       // 確保 MathJax 在 DOM 更新後重新渲染 LaTeX (如果 LaTeX 是動態加入的)
+       function typesetMathJax() {
+           if (window.MathJax) {
+               MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+           }
+       }
+       // 頁面載入時 MathJax 會自動處理靜態內容。
+       // 如果未來 DEMATEL 方法說明區塊的內容變為動態生成，則需在生成後調用 typesetMathJax()。
+
+   </script>
+</body>
+</html>
