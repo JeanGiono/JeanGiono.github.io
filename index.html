@@ -1,362 +1,1284 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" style="scroll-behavior: smooth;">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手繪風格餐廳地圖 - 延吉街美食 (含Google地圖連結)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'ZCOOL KuaiLe', cursive, '微軟正黑體', sans-serif;
-            background-color: #f0f0e0; /* 淺米色背景 */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            color: #4a3b31; /* 深棕色文字 */
-        }
-        #map-title {
-            font-size: 2.5rem;
-            color: #8B4513; /* 鞍褐色 */
-            margin-bottom: 20px;
-            text-align: center;
-            text-shadow: 1px 1px #fff;
-        }
-        #map-container {
-            width: 100%;
-            max-width: 800px;
-            height: 600px;
-            background-color: #fffaf0; /* 亞麻色背景，像紙張 */
-            border: 3px solid #8B4513; /* 棕色邊框 */
-            border-radius: 15px 25px 15px 20px / 20px 15px 25px 15px; /* 不規則圓角 */
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        .restaurant-marker {
-            position: absolute;
-            background-color: #FFDEAD; /* Navajo White - 標籤背景色 */
-            border: 2px solid #D2691E; /* 巧克力色邊框 */
-            padding: 7px 10px;
-            border-radius: 20px 10px 15px 8px / 10px 18px 8px 12px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            font-size: 0.8rem;
-            text-align: center;
-            white-space: nowrap;
-            max-width: 120px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .restaurant-marker:hover {
-            transform: scale(1.1) rotate(-2deg);
-            box-shadow: 4px 4px 8px rgba(0,0,0,0.25);
-            z-index: 10;
-            overflow: visible;
-            white-space: normal;
-        }
-        .center-marker {
-            background-color: #FF7F50; /* 珊瑚色 - 中心點標籤 */
-            color: white;
-            border-color: #A0522D; /* 黃褐色 */
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        .road {
-            position: absolute;
-            background-color: #D3D3D3;
-            border-radius: 5px;
-            opacity: 0.7;
-        }
-        #yanji-street {
-            width: 18px;
-            height: 100%;
-            left: 48%;
-            top: 0;
-            transform: translateX(-50%) rotate(5deg);
-        }
-        #renai-road {
-            width: 100%;
-            height: 18px;
-            top: 38%;
-            left: 0;
-            transform: translateY(-50%) rotate(-3deg);
-        }
-         #guangfu-road {
-            width: 15px;
-            height: 100%;
-            left: 75%;
-            top: 0;
-            transform: translateX(-50%) rotate(2deg);
-            opacity: 0.6;
-        }
-        #info-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #FFF8DC;
-            border: 3px solid #8B4513;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            z-index: 100;
-            width: 90%;
-            max-width: 450px; /* 稍微加寬以容納連結 */
-            text-align: left;
-        }
-        #info-popup h3 {
-            font-size: 1.5rem;
-            color: #8B4513;
-            margin-bottom: 10px;
-        }
-        #info-popup p {
-            font-size: 0.95rem;
-            margin-bottom: 5px;
-            line-height: 1.4;
-        }
-        #info-popup strong {
-            color: #A0522D;
-        }
-        #popup-gmap-link {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 6px 12px;
-            background-color: #4CAF50; /* 綠色按鈕 */
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            transition: background-color 0.2s;
-        }
-        #popup-gmap-link:hover {
-            background-color: #45a049;
-        }
-        #close-popup {
-            display: block;
-            margin: 20px auto 0; /* 增加與地圖連結的間距 */
-            padding: 8px 15px;
-            background-color: #CD853F;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        #close-popup:hover {
-            background-color: #A0522D;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEMATEL 分析工具 (含因果圖)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+    <style>
+        /* 基本設定與字型 */
+        body {
+            font-family: 'Inter', 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #f8fafc; /* 更柔和的背景色 */
+        } 
 
-        @media (max-width: 768px) {
-            #map-title { font-size: 2rem; }
-            #map-container { height: 500px; }
-            .restaurant-marker { font-size: 0.7rem; padding: 5px 8px; }
-            .center-marker { font-size: 0.8rem; }
-        }
-        @media (max-width: 480px) {
-             #map-container { height: 450px; }
-            .restaurant-marker { font-size: 0.65rem; padding: 4px 6px; max-width: 90px; }
-             .center-marker { font-size: 0.75rem; }
-            #info-popup { padding: 15px; max-width: 300px; }
-            #info-popup h3 { font-size: 1.2rem; }
-            #info-popup p { font-size: 0.85rem; }
-            #popup-gmap-link { font-size: 0.8rem; padding: 5px 10px; }
-        }
-    </style>
+        /* 主容器 */
+        .main-container {
+            max-width: 1280px; /* 限制最大寬度 */
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #ffffff;
+            padding: 2rem md:2.5rem; /* 調整內距 */
+            border-radius: 0.75rem; /* 增加圓角 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* 更細緻的陰影 */
+        }
+        
+        /* 表格容器 */
+        .table-container {
+            max-height: 380px;
+            overflow-y: auto;
+            border-radius: 0.5rem; /* 調整圓角 */
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05); /* 輕微陰影 */
+        } 
+
+        /* 表格樣式 */
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem 1rem; /* 調整內距 */
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.9rem; /* 稍微調整表格內文字大小 */
+        } 
+
+        th {
+            background-color: #f9fafb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        tbody tr:hover {
+            background-color: #f3f4f6;
+        } 
+
+        /* 輸入框與下拉選單 */
+        input[type="number"], select {
+            width: auto;
+            min-width: 120px; /* 增加最小寬度 */
+            text-align: center;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.625rem 0.875rem; /* 調整內距 */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            font-size: 0.9rem;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            border-color: #3b82f6; /* 調整焦點顏色 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        } 
+
+        #customThresholdInputContainer input[type="number"] {
+            width: 140px;
+        } 
+
+        /* 區塊標題 */
+        .section-title {
+            font-size: 1.875rem; /* 2xl */
+            font-weight: 700;
+            margin-bottom: 1.5rem; /* 增加底部間距 */
+            color: #1f2937; /* 更深的標題顏色 */
+            border-bottom: 2px solid #3b82f6; /* 標題下方藍色線條 */
+            padding-bottom: 0.5rem; /* 線條與文字間距 */
+        } 
+
+        /* 子區塊標題 */
+        .subsection-title {
+            font-size: 1.5rem; /* xl */
+            font-weight: 600;
+            margin-top: 1.75rem; /* 增加上方間距 */
+            margin-bottom: 1rem;
+            color: #111827; /* 更深的子標題顏色 */
+        } 
+
+        /* 內容文字 */
+        .content-text {
+            font-size: 1rem; /* md */
+            line-height: 1.8; /* 增加行高 */
+            color: #374151;
+        }
+        .content-text p, .content-text ul, .content-text ol {
+            margin-bottom: 1.125rem; /* 增加段落間距 */
+        }
+        .content-text ul, .content-text ol {
+            padding-left: 2rem; /* 增加列表縮排 */
+        }
+         .content-text ol > li > ul {
+            margin-top: 0.625rem;
+            padding-left: 1.75rem;
+        }
+        .content-text code {
+            background-color: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            color: #1e293b; /* 程式碼顏色 */
+        }
+        .h4-custom { /* DEMATEL 說明中的 h4 */
+            font-size: 1.25rem; /* lg */
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.625rem;
+            color: #1e40af;
+        } 
+
+        /* 按鈕樣式 */
+        .btn {
+            padding: 0.75rem 1.5rem; /* 增加按鈕內距 */
+            border-radius: 0.5rem; /* 更圓的按鈕 */
+            font-weight: 500;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            letter-spacing: 0.025em; /* 輕微增加字距 */
+        }
+        .btn:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); /* 更明顯的焦點陰影 */
+        }
+        .btn:active {
+            transform: translateY(1px);
+        } 
+
+        .btn-primary {
+            background-color: #3b82f6; /* 主按鈕顏色 (藍色) */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        } 
+
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        } 
+
+        .btn-success {
+            background-color: #10b981; /* 調整成功按鈕顏色 (祖母綠) */
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+        } 
+
+        /* 資訊框 */
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 5px solid #60a5fa; /* 調整邊框顏色 */
+            padding: 1.25rem;
+            margin-bottom: 1.5rem; /* 增加底部間距 */
+            border-radius: 0.5rem; /* 增加圓角 */
+        }
+        .info-box p {
+            color: #1e40af; /* 調整文字顏色 */
+            font-size: 0.95rem;
+        } 
+
+        /* 因果圖容器 */
+        #causalDiagramContainer {
+            width: 100%;
+            max-width: 800px;
+            margin: 1.5rem auto; /* 增加上下邊距 */
+            border: 1px solid #d1d5db; /* 調整邊框顏色 */
+            border-radius: 0.75rem; /* 增加圓角 */
+            padding: 1rem; /* 增加內邊距 */
+            background-color: #fdfdff; /* 非常淺的背景色 */
+        }
+        #causalDiagramCanvas {
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 16 / 10;
+            max-height: 550px; /* 稍微增加最大高度 */
+        } 
+
+        /* 訊息提示框 */
+        #messageBox {
+            animation: fadeInOut 5s ease-in-out forwards; /* 確保動畫執行完畢後停在最後一幀 */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 增加陰影 */
+        } 
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-30px) scale(0.95); } /* 調整初始狀態 */
+            10% { opacity: 1; transform: translateY(0) scale(1); }
+            90% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-30px) scale(0.95); }
+        } 
+
+        /* 檔案上傳輸入框 */
+        input[type="file"] {
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            padding: 0.625rem;
+            background-color: #f9fafb; /* 增加背景色 */
+        }
+        input[type="file"]::file-selector-button {
+            margin-right: 1rem;
+            border: none;
+            background-color: #4f46e5;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            font-weight: 500;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: #4338ca;
+        }
+        
+        /* 響應式調整 */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1.5rem;
+                border-radius: 0.5rem;
+            }
+            .section-title {
+                font-size: 1.625rem;
+            }
+            .subsection-title {
+                font-size: 1.375rem;
+            }
+            .content-text {
+                font-size: 0.95rem;
+                line-height: 1.7;
+            }
+            th, td {
+                padding: 0.625rem 0.5rem;
+                font-size: 0.85rem;
+            }
+            .btn {
+                padding: 0.625rem 1.125rem;
+                width: 100%;
+            }
+            .flex-col.sm\:flex-row > .btn:not(:last-child) {
+                margin-bottom: 0.75rem;
+            }
+            .flex-col.sm\:flex-row {
+                flex-direction: column;
+            }
+            .sm\:w-auto {
+                 width: 100%;
+            }
+            #causalDiagramContainer {
+                padding: 0.75rem;
+            }
+        } 
+
+        /* 數學公式與文字間距調整 */
+        .content-text p .MathJax_Display {
+            margin-top: 0.5em !important;
+            margin-bottom: 0.75em !important;
+        }
+        .content-text li .MathJax_Display {
+            margin-top: 0.25em !important;
+            margin-bottom: 0.5em !important;
+        } 
+
+    </style>
 </head>
-<body>
+<body class="bg-slate-100 p-4 md:p-8">
+    <div class="main-container">
+        <header class="mb-12 text-center"> <h1 class="text-4xl md:text-5xl font-bold text-slate-800 tracking-tight">DEMATEL 分析工具</h1>
+            <p class="text-slate-600 mt-4 text-lg md:text-xl">上傳 Excel 檔案，進行 DEMATEL 分析、繪製因果圖並匯出結果。</p>
+        </header> 
 
-    <h1 id="map-title">延吉街周邊美食地圖 (含Google地圖連結)</h1>
+        <section id="methodologySection" class="mb-12 p-6 md:p-8 border border-slate-200 rounded-xl bg-slate-50 content-text shadow-sm">
+            <h2 class="section-title">DEMATEL 演算法說明</h2>
+            <p><strong>DEMATEL（Decision Making Trial and Evaluation Laboratory，決策實驗室分析法）</strong>主要用於分析複雜系統中多個因素間的因果關係，並以因果圖（Causal Diagram）將結果視覺化。以下為完整演算法步驟及因果圖繪製方法：</p>
+            
+            <hr class="my-8 border-slate-300"> 
 
-    <div id="map-container">
-        <div class="road" id="yanji-street"></div>
-        <div class="road" id="renai-road"></div>
-        <div class="road" id="guangfu-road"></div>
-    </div>
+            <h3 class="subsection-title">一、DEMATEL 演算法步驟</h3>
+            <ol class="list-decimal space-y-4"> 
+                <li class="mb-2">
+                    <strong>建立直接關係矩陣（Initial Direct-Relation Matrix，$$S$$）</strong>
+                    <p>由專家對所有因素兩兩間的影響程度進行評分，常用 0 至 4 或 1 至 4 等等級（例如：0＝無影響，1＝低度影響，2＝中度影響，3＝高度影響，4＝極高度影響），因素對自身的影響程度應設定為 0。</p>
+                </li>
+                <li class="mb-2">
+                    <strong>正規化直接關係矩陣（Normalization）</strong>
+                    <p>將直接關係矩陣中的每個元素除以「所有列元素和的最大值」，得到正規化矩陣 $$X$$：</p>
+                    <p class="my-2">$$ X = \frac{S}{\max_{1 \le i \le n} \sum_{j=1}^{n} S_{ij}} $$</p>
+                    <p>此步驟確保正規化後的所有元素值都介於 0 與 1 之間。</p>
+                </li>
+                <li class="mb-2">
+                    <strong>計算總關係矩陣（Total-Relation Matrix，$$T$$）</strong>
+                    <p>利用以下公式計算總關係矩陣：</p>
+                    <p class="my-2">$$ T = X (I - X)^{-1} $$</p>
+                    <p>其中，$$I$$ 代表單位矩陣。總關係矩陣 $$T$$ 包含了各因素之間的直接影響以及所有間接影響。</p>
+                </li>
+                <li class="mb-2">
+                    <strong>計算各因素的影響度（Prominence，D）與受影響度（Relation，R）</strong>
+                    <p>影響度 $$D_i$$：代表第 $$i$$ 個因素對其他所有因素的「總影響程度」，計算方式為總關係矩陣 $$T$$ 中第 $$i$$「列」（row）所有元素之和。</p>
+                    <p>受影響度 $$R_j$$：代表第 $$j$$ 個因素受到其他所有因素影響的「總被影響程度」，計算方式為總關係矩陣 $$T$$ 中第 $$j$$「行」（column）所有元素之和。</p>
+                </li>
+                <li class="mb-2">
+                    <strong>計算中心度（Centrality，$$D+R$$）與原因度（Causality，$$D-R$$）</strong>
+                    <p>中心度（$$D_i+R_i$$）：表示因素 $$i$$ 在整個系統中的「重要性程度」或「核心程度」。中心度越高，代表該因素在系統中的整體影響力越大。</p>
+                    <p>原因度（$$D_i-R_i$$）：表示因素 $$i$$ 在系統中扮演的角色。若原因度為正值，則該因素偏向於「原因型」因素（Cause Factor），主要影響其他因素；若原因度為負值，則該因素偏向於「結果型」因素（Effect Factor），主要受其他因素影響。</p>
+                </li>
+                <li class="mb-3"> 
+                    <strong>（可選）設定臨界值（Threshold）</strong>
+                    <p>在 DEMATEL 分析中，臨界值是用來篩選總關係矩陣（Total-Relation Matrix，$$T$$）中較為顯著的影響關係的標準。其主要目的是過濾掉影響力相對較弱的連結，使得最終的因果圖（Causal Diagram）能夠更清晰地呈現主要的影響路徑，避免圖形因線條過多而顯得複雜、難以解讀。</p>
+                    
+                    <h4 class="h4-custom">臨界值的設定方式</h4>
+                    <p>常見的臨界值設定方法包括：</p>
+                    <ul class="list-disc ml-6 mt-2 space-y-2"> 
+                        <li class="mb-1"><strong>平均值法：</strong>將總關係矩陣 $$T$$ 中所有元素的「平均值」設定為臨界值。
+                            $$ \text{Threshold} = \frac{1}{n^2} \sum_{i=1}^{n} \sum_{j=1}^{n} T_{ij} $$
+                            （其中 $$n$$ 為因素個數）。在繪製因果圖時，僅顯示 $$T_{ij} > \text{Threshold}$$ 的關係線。
+                        </li>
+                        <li class="mb-1"><strong>中位數法：</strong>以總關係矩陣 $$T$$ 中所有元素的「中位數」作為臨界值。</li>
+                        <li class="mb-1"><strong>自訂百分位法：</strong>例如，設定矩陣 $$T$$ 中數值排名前 25% 或 50% 的影響關係的分界點作為臨界值。</li>
+                        <li class="mb-1"><strong>專家判斷法：</strong>由該領域的專家根據其專業知識與經驗，直接指定一個合適的數值作為臨界值。</li>
+                    </ul>
+                    
+                    <h4 class="h4-custom">實作流程建議</h4>
+                    <ul class="list-disc ml-6 mt-2 space-y-2">
+                        <li class="mb-1"><strong>計算臨界值：</strong>根據所選方法（本工具目前提供平均值、中位數及自訂數值選項）計算出總關係矩陣 $$T$$ 的臨界值。</li>
+                        <li class="mb-1"><strong>篩選關係：</strong>在繪製因果圖時，可以考慮僅保留那些影響程度 $$T_{ij}$$ 大於所設定臨界值的關係。</li>
+                        <li class="mb-1"><strong>簡化因果圖：</strong>透過臨界值的篩選，可以大幅減少因果圖中的線條數量，使圖形更聚焦於系統中的主要影響路徑，提升圖表的可詮釋性。（此功能為進階選項，目前工具的圖表會顯示所有因素點，關係線的繪製可基於此臨界值考量加入。）</li>
+                    </ul>
+                </li>
+            </ol> 
 
-    <div id="info-popup" style="display:none;">
-        <h3 id="popup-name"></h3>
-        <p><strong>類型：</strong> <span id="popup-type"></span></p>
-        <p><strong>地址：</strong> <span id="popup-address"></span></p>
-        <p><strong>電話：</strong> <span id="popup-phone"></span></p>
-        <p><strong>距離中心點：</strong> <span id="popup-distance"></span></p>
-        <p><strong>評分：</strong> <span id="popup-rating"></span></p>
-        <a id="popup-gmap-link" href="#" target="_blank">在 Google 地圖上查看</a>
-        <button id="close-popup">關閉</button>
-    </div>
+            <hr class="my-8 border-slate-300"> 
 
-    <script>
-        const restaurants = [
-            {
-                id: 'shiyun',
-                name: '世運食品-延吉店',
-                type: '食品材料',
-                address: '106 台灣台北市大安區延吉街232之3號',
-                phone: '02-2325-0368',
-                distance: '中心點',
-                rating: 'N/A',
-                isCenter: true,
-                position: { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('世運食品 台北市大安區延吉街232之3號')}`
-            },
-            {
-                id: 'zhanjun',
-                name: '展峻小吃店',
-                type: '台灣小吃',
-                address: '106台灣台北市大安區仁愛路四段300巷22號',
-                phone: '0933-300-433',
-                distance: '約 120 公尺',
-                rating: '4.5 ★',
-                position: { top: '38%', left: '35%', transform: 'translate(-50%, -50%) rotate(3deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('展峻小吃店 台北市大安區仁愛路四段300巷22號')}`
-            },
-            {
-                id: 'sugarpea',
-                name: 'SUGAR PEA',
-                type: '咖啡廳 / 西式簡餐',
-                address: '106台灣台北市大安區仁愛路四段300巷20弄16號1樓',
-                phone: '02-2325-6188',
-                distance: '約 200 公尺',
-                rating: '4.4 ★',
-                position: { top: '30%', left: '65%', transform: 'translate(-50%, -50%) rotate(-4deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('SUGAR PEA CAFE KITCHEN 台北市大安區仁愛路四段300巷20弄16號')}`
-            },
-            {
-                id: 'dading',
-                name: '大鼎豬血湯',
-                type: '台灣小吃',
-                address: '106台灣台北市大安區延吉街249號',
-                phone: '02-2706-3088',
-                distance: '約 200 公尺',
-                rating: '4.0 ★',
-                position: { top: '62%', left: '30%', transform: 'translate(-50%, -50%) rotate(-2deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('大鼎豬血湯 台北延吉店')}`
-            },
-            {
-                id: 'harbor106',
-                name: '106HARBOR',
-                type: '美式海鮮',
-                address: '106台灣台北市大安區安和路一段127巷29弄13號1樓',
-                phone: '02-2709-7868',
-                distance: '約 220 公尺',
-                rating: '4.9 ★',
-                position: { top: '70%', left: '68%', transform: 'translate(-50%, -50%) rotate(5deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('106HARBOR美式海鮮餐廳 台北市大安區安和路一段127巷29弄13號')}`
-            },
-            {
-                id: 'beida',
-                name: '北大行小籠包',
-                type: '中式麵點 / 小籠包',
-                address: '110台灣台北市信義區光復南路427號',
-                phone: '02-2729-9370',
-                distance: '約 240 公尺',
-                rating: '4.3 ★',
-                position: { top: '18%', left: '55%', transform: 'translate(-50%, -50%) rotate(2deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('北大行小籠包 台北市信義區光復南路427號')}`
-            },
-            {
-                id: 'zhousifu',
-                name: '粥師傅',
-                type: '粥品 / 鍋燒麵',
-                address: '106台灣台北市大安區延吉街153之10號',
-                phone: '02-2775-2236',
-                distance: '約 350 公尺',
-                rating: '4.1 ★',
-                position: { top: '85%', left: '45%', transform: 'translate(-50%, -50%) rotate(-3deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('粥師傅廣東粥鍋燒意麵延吉店')}`
-            },
-            {
-                id: 'ramen',
-                name: '鷹流深夜拉麵',
-                type: '日式拉麵',
-                address: '105台灣台北市松山區延吉街2號',
-                phone: 'N/A',
-                distance: '約 400 公尺',
-                rating: '4.1 ★',
-                position: { top: '45%', left: '15%', transform: 'translate(-50%, -50%) rotate(4deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('鷹流東京醬油拉麵蘭丸 台北市松山區延吉街2號')}`
-            },
-            {
-                id: 'zhuanweixiang',
-                name: '饌味香鍋貼',
-                type: '中式麵點 / 鍋貼',
-                address: '106台灣台北市大安區忠孝東路四段216巷32弄1號',
-                phone: '02-2721-2580',
-                distance: '約 450 公尺',
-                rating: '3.3 ★',
-                position: { top: '25%', left: '85%', transform: 'translate(-50%, -50%) rotate(-5deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('饌味香鍋貼麵食館 台北市大安區忠孝東路四段216巷32弄1號')}`
-            },
-            {
-                id: 'ohsoymilk',
-                name: '老漿家',
-                type: '豆漿 / 中式早餐',
-                address: '106台灣台北市大安區延吉街110號1F',
-                phone: '02-2779-0602',
-                distance: '約 450 公尺',
-                rating: '4.4 ★',
-                position: { top: '15%', left: '20%', transform: 'translate(-50%, -50%) rotate(6deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('老漿家OHsoymilk 台北延吉店')}`
-            },
-            {
-                id: 'greenhouse',
-                name: 'GreenHouse',
-                type: '早午餐 / 異國料理',
-                address: '110台灣台北市信義區信義路四段395巷6弄8號1樓',
-                phone: '0909-118-182',
-                distance: '約 500 公尺',
-                rating: '4.2 ★',
-                position: { top: '80%', left: '80%', transform: 'translate(-50%, -50%) rotate(1deg)' },
-                googleMapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('GreenHouse早午餐 台北市信義區信義路四段395巷6弄8號')}`
-            }
-        ];
+            <h3 class="subsection-title">二、因果圖繪製方法</h3>
+            <ul class="space-y-2"> 
+                <li><strong>橫軸（X-axis）：</strong>中心度（$$D+R$$）。</li>
+                <li><strong>縱軸（Y-axis）：</strong>原因度（$$D-R$$）。</li>
+                <li>圖中的每一個點代表一個因素，其座標位置由該因素的中心度（$$D+R$$）和原因度（$$D-R$$）決定。</li>
+                <li>圖表會為每個因素分配不同的顏色，並在圖例（Legend）中標示各顏色所代表的因素，方便識別。</li>
+                <li>（進階繪圖功能）可使用箭頭或線條來標示因素間影響程度顯著（例如，大於所設定臨界值）的因果關係。</li>
+            </ul>
+            <blockquote class="mt-6 p-4 bg-slate-100 rounded-md"> 
+                <p class="pl-4 border-l-4 border-slate-400 italic text-slate-600">「繪製因果圖時，以中心度（$$D+R$$）為橫軸，原因度（$$D-R$$）為縱軸，構成一個二維座標圖形。圖中，原因度（$$D-R$$）為正值的因素傾向歸類為『原因群』，而原因度為負值的因素則傾向歸類為『結果群』。」</p>
+            </blockquote> 
 
-        const mapContainer = document.getElementById('map-container');
-        const infoPopup = document.getElementById('info-popup');
-        const popupName = document.getElementById('popup-name');
-        const popupType = document.getElementById('popup-type');
-        const popupAddress = document.getElementById('popup-address');
-        const popupPhone = document.getElementById('popup-phone');
-        const popupDistance = document.getElementById('popup-distance');
-        const popupRating = document.getElementById('popup-rating');
-        const popupGmapLink = document.getElementById('popup-gmap-link'); // 取得地圖連結元素
-        const closePopupButton = document.getElementById('close-popup');
+            <hr class="my-8 border-slate-300"> 
 
-        restaurants.forEach(restaurant => {
-            const marker = document.createElement('div');
-            marker.classList.add('restaurant-marker');
-            if (restaurant.isCenter) {
-                marker.classList.add('center-marker');
-            }
-            marker.id = restaurant.id;
-            marker.textContent = restaurant.name;
-            marker.title = restaurant.name;
+            <h3 class="subsection-title">三、前端實作建議（含因果圖繪製）</h3>
+            <ul class="space-y-2">
+                <li><strong>矩陣計算：</strong>可利用 JavaScript 程式庫（例如：math.js）來進行矩陣的相關運算。</li>
+                <li><strong>因果圖繪製：</strong>建議使用圖表繪製程式庫（例如：D3.js、Chart.js 或 Plotly.js）。將每個因素以一個點的形式標示於二維座標圖上，其中橫軸代表中心度（$$D+R$$），縱軸代表原因度（$$D-R$$）。若需顯示因素間的影響關係，可使用線條或箭頭連接影響程度較強的因素對。</li>
+                <li><strong>自動化計算與繪圖流程：</strong>
+                    <ol class="list-decimal ml-6 space-y-2">
+                        <li>使用者上傳包含直接關係矩陣的 Excel 檔案。</li>
+                        <li>系統解析檔案，取得直接關係矩陣。</li>
+                        <li>完成 DEMATEL 的所有計算步驟後，將各因素的中心度（$$D+R$$）和原因度（$$D-R$$）結果傳遞給圖表繪製模組。</li>
+                        <li>動態生成因果關係圖，並提供將圖表或分析結果匯出的功能。</li>
+                    </ol>
+                </li>
+            </ul>
+             <p class="text-sm mt-4 text-slate-500">註：本分析工具目前已包含上述前端實作的主要核心功能。</p> 
 
-            marker.style.top = restaurant.position.top;
-            marker.style.left = restaurant.position.left;
-            marker.style.transform = restaurant.position.transform || 'translate(-50%, -50%)';
-            
-            marker.addEventListener('click', () => {
-                popupName.textContent = restaurant.name;
-                popupType.textContent = restaurant.type;
-                popupAddress.textContent = restaurant.address;
-                popupPhone.textContent = restaurant.phone || '無提供';
-                popupDistance.textContent = restaurant.distance;
-                popupRating.textContent = restaurant.rating;
-                popupGmapLink.href = restaurant.googleMapUrl; // 設定地圖連結的 URL
-                infoPopup.style.display = 'block';
-            });
-            mapContainer.appendChild(marker);
-        });
+            <hr class="my-8 border-slate-300"> 
 
-        closePopupButton.addEventListener('click', () => {
-            infoPopup.style.display = 'none';
-        });
-    </script>
+            <h3 class="subsection-title">四、參考 R 套件函數流程（供前端移植參考）</h3>
+            <p>若開發者熟悉 R 語言，以下是一些在 R 環境中進行 DEMATEL 分析時可能用到的函數或對應概念，可供將相關邏輯移植到前端時參考：</p>
+            <ul class="space-y-2 mt-2">
+                <li><code>normalize()</code> 或類似功能：用於正規化直接關係矩陣。</li>
+                <li><code>total_relationship_matrix()</code> 或類似功能：用於計算總關係矩陣。</li>
+                <li><code>calculate_prominence_relation()</code> 或類似功能：用於計算並回傳各因素的影響度（D）、受影響度（R）、中心度（D+R）及原因度（D-R）。</li>
+                <li><code>plot_causal_diagram()</code> 或 <code>visualize_dematel()</code> 或類似功能：用於繪製因果關係圖。</li>
+            </ul>
+        </section> 
+
+        <section id="uploadSection" class="mb-12 p-6 md:p-8 border border-slate-200 rounded-xl bg-slate-50 shadow-sm">
+            <h2 class="section-title">步驟一：上傳直接關係矩陣 (Excel)</h2>
+            <div class="info-box">
+                <p class="text-sm text-slate-700">
+                    請上傳包含直接關係矩陣的 Excel 檔案（.xlsx 或 .xls）。矩陣的第一列應為各因素的名稱，第一行（因素名稱之後）也應為各因素的名稱，其餘儲存格為對應的影響程度數值（例如 0 至 4 的整數或小數）。
+                    <br><strong>重要提示：</strong>因素對自身的影響程度（即矩陣對角線上的元素）應設定為 0。
+                </p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-x-6 gap-y-4 mt-6">
+                <input type="file" id="excelFile" accept=".xlsx,.xls" class="block w-full text-sm text-slate-700 border border-slate-300 rounded-lg cursor-pointer bg-slate-50 focus:outline-none p-3 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <button id="uploadButton" class="btn btn-primary w-full sm:w-auto whitespace-nowrap shrink-0">上傳並預覽資料</button>
+            </div>
+            <p id="fileName" class="mt-4 text-sm text-slate-500"></p>
+        </section> 
+
+        <section id="matrixDisplaySection" class="mb-12 p-6 md:p-8 border border-slate-200 rounded-xl bg-white hidden shadow-sm">
+            <h2 class="section-title">步驟二：檢視與修正原始矩陣 (S)</h2>
+            <div class="info-box">
+                <p class="text-sm text-slate-700">
+                    請仔細確認以下從 Excel 檔案讀取的直接關係矩陣。您可以在表格中直接修改任何數值。
+                    再次確認對角線上的元素（即因素對自身的影響）是否均為 0。
+                </p>
+            </div>
+            <div id="originalMatrixContainer" class="table-container my-6">
+            </div>
+            <div class="flex flex-col sm:flex-row gap-x-6 gap-y-4 mt-6">
+                <button id="confirmMatrixButton" class="btn btn-primary w-full sm:w-auto">確認矩陣並執行計算</button>
+                <button id="reUploadButton" class="btn btn-secondary w-full sm:w-auto">重新上傳檔案</button>
+            </div>
+        </section> 
+
+        <section id="resultsSection" class="mb-12 p-6 md:p-8 border border-slate-200 rounded-xl bg-white hidden shadow-sm">
+            <h2 class="section-title">步驟三：DEMATEL 分析結果</h2> 
+
+            <div class="mb-10"> 
+                <h3 class="text-xl font-semibold text-slate-700 mb-4">1. 正規化矩陣 (Normalized Matrix, X)</h3>
+                <div id="normalizedMatrixContainer" class="table-container"></div>
+            </div> 
+
+            <div class="mb-10">
+                <h3 class="text-xl font-semibold text-slate-700 mb-4">2. 全關係矩陣 (Total Relationship Matrix, T)</h3>
+                <div id="totalRelationshipMatrixContainer" class="table-container"></div>
+            </div> 
+
+            <div class="mb-10">
+                <h3 class="text-xl font-semibold text-slate-700 mb-4">3. 各項指標 (D, R, D+R, D-R)</h3>
+                <div id="indicatorsContainer" class="table-container"></div>
+            </div> 
+
+            <div class="mb-10">
+                <h3 class="text-xl font-semibold text-slate-700 mb-4">4. 設定臨界值 (Threshold)</h3>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-4 items-end"> 
+                    <div>
+                        <label for="thresholdType" class="block text-sm font-medium text-slate-700 mb-1.5">臨界值計算方式：</label>
+                        <select id="thresholdType" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 bg-white">
+                            <option value="average" selected>平均值 (Average)</option>
+                            <option value="median">中位數 (Median)</option>
+                            <option value="custom">自訂 (Custom)</option>
+                        </select>
+                    </div>
+                    <div id="customThresholdInputContainer" class="hidden">
+                        <label for="customThresholdValue" class="block text-sm font-medium text-slate-700 mb-1.5">自訂臨界值：</label>
+                        <input type="number" id="customThresholdValue" step="0.001" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5" placeholder="請手動輸入數值">
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-3 leading-relaxed">
+                    選擇臨界值的計算方式或手動輸入。臨界值主要用於後續分析時，協助識別哪些因素之間的影響程度較為顯著，進而可以在繪製因果圖時簡化關係線的呈現（此為進階繪圖功能，可待後續擴展）。
+                </p>
+                <p id="calculatedThresholdDisplay" class="text-sm font-semibold text-blue-600 mt-4 p-3 bg-blue-50 rounded-md border border-blue-200"></p>
+            </div> 
+
+            <div class="mb-10">
+                <h3 class="text-xl font-semibold text-slate-700 mb-4">5. 因果關係圖 (Causal Diagram)</h3>
+                <div id="causalDiagramContainer" class="bg-slate-50 p-4 rounded-lg min-h-[480px] flex items-center justify-center">
+                    <canvas id="causalDiagramCanvas"></canvas>
+                </div>
+                <p id="causalDiagramMessage" class="text-center text-slate-500 mt-3"></p>
+            </div> 
+
+            <div class="flex flex-col sm:flex-row gap-x-6 gap-y-4 mt-10"> 
+                <button id="exportResultsButton" class="btn btn-success w-full sm:w-auto">匯出所有結果至 Excel</button>
+                <button id="analyzeNewButton" class="btn btn-secondary w-full sm:w-auto">分析新檔案 (清空目前)</button>
+            </div>
+        </section> 
+
+        <div id="messageBox" class="fixed top-6 right-6 text-white p-4 rounded-lg shadow-xl hidden z-[100]"> <p id="messageText" class="text-base"></p>
+        </div>
+    </div> 
+
+    <script>
+        // DOM 元素獲取
+        const excelFileInput = document.getElementById('excelFile');
+        const uploadButton = document.getElementById('uploadButton');
+        const fileNameDisplay = document.getElementById('fileName');
+        const matrixDisplaySection = document.getElementById('matrixDisplaySection');
+        const originalMatrixContainer = document.getElementById('originalMatrixContainer');
+        const confirmMatrixButton = document.getElementById('confirmMatrixButton');
+        const reUploadButton = document.getElementById('reUploadButton');
+        const resultsSection = document.getElementById('resultsSection');
+        const normalizedMatrixContainer = document.getElementById('normalizedMatrixContainer');
+        const totalRelationshipMatrixContainer = document.getElementById('totalRelationshipMatrixContainer');
+        const indicatorsContainer = document.getElementById('indicatorsContainer');
+        
+        // 臨界值相關 DOM
+        const thresholdTypeSelect = document.getElementById('thresholdType');
+        const customThresholdInputContainer = document.getElementById('customThresholdInputContainer');
+        const customThresholdValueInput = document.getElementById('customThresholdValue');
+        const calculatedThresholdDisplay = document.getElementById('calculatedThresholdDisplay'); 
+
+        const causalDiagramCanvas = document.getElementById('causalDiagramCanvas');
+        const causalDiagramMessage = document.getElementById('causalDiagramMessage');
+        const exportResultsButton = document.getElementById('exportResultsButton');
+        const analyzeNewButton = document.getElementById('analyzeNewButton');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText'); 
+
+        // 儲存矩陣資料的變數
+        let factors = []; // 因素名稱
+        let originalMatrix_S = []; // 原始直接關係矩陣 S
+        let normalizedMatrix_X = []; // 正規化矩陣 X
+        let totalRelationshipMatrix_T = []; // 全關係矩陣 T
+        let D_values = []; // 影響度 (D)
+        let R_values = []; // 被影響度 (R)
+        let D_plus_R = []; // 中心度 (D+R)
+        let D_minus_R = []; // 原因度 (D-R)
+        let currentThresholdValue = null; // 目前使用的臨界值
+        let causalChart = null; // Chart.js 實例 
+
+        // 圖表顏色配置 (更鮮明且專業的顏色)
+        const chartColors = [
+            '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899',
+            '#6366F1', '#F97316', '#0EA5E9', '#D946EF', '#14B8A6', '#FACC15',
+            '#22C55E', '#A855F7', '#E11D48', '#64748B'
+        ].map(hex => `${hex}E6`); // E6 for 90% opacity 
+
+        // --- 檔案上傳與解析 ---
+        uploadButton.addEventListener('click', handleFileUpload);
+        excelFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                fileNameDisplay.textContent = `已選擇檔案：${file.name}`;
+                uploadButton.focus(); // 選擇檔案後，焦點移到上傳按鈕
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        }); 
+
+        function handleFileUpload() {
+            const file = excelFileInput.files[0];
+            if (!file) {
+                showMessage("請先選擇一個 Excel 檔案。", "warn"); // 改為警告
+                excelFileInput.focus();
+                return;
+            } 
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    // header: 1 -> 將每行轉為陣列; raw: false -> 將日期等轉為JS格式而非原始數字
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: null });
+
+
+                    if (jsonData.length < 2) {
+                        showMessage("Excel 檔案格式錯誤：至少需要包含因素名稱列和一行影響數據。", "error");
+                        return;
+                    }
+                    
+                    // 解析因素名稱，過濾空字串和null/undefined
+                    factors = jsonData[0].slice(1).map(f => f ? String(f).trim() : null).filter(f => f); 
+
+                    // 解析矩陣數據，確保行和因素數量一致，且過濾掉完全為空的行
+                    originalMatrix_S = jsonData.slice(1)
+                        .filter(row => row && row.slice(1, factors.length + 1).some(cell => cell !== null && cell !== undefined && String(cell).trim() !== ""))
+                        .map(row => row.slice(1, factors.length + 1).map(cell => {
+                            // 如果 cell 是 null 或 undefined，視為 0
+                            if (cell === null || cell === undefined) return 0;
+                            const num = Number(cell);
+                            // 如果轉換後是 NaN，也視為 0，並提示
+                            if (isNaN(num)) {
+                                // 避免在循環中頻繁 showMessage，可以考慮收集錯誤後統一提示或只提示一次
+                                // console.warn(`Invalid number detected: ${cell}, treated as 0.`);
+                                return 0;
+                            }
+                            return num;
+                        }));
+                    
+                    if (factors.length === 0 ) {
+                         showMessage("Excel 檔案格式錯誤：未能解析到有效的因素名稱。請確保第一行包含因素名稱，且名稱不為空。", "error");
+                         return;
+                    }
+                    if (originalMatrix_S.length === 0 && factors.length > 0) {
+                        showMessage("Excel 檔案格式錯誤：未能解析到有效的數據。請確保因素名稱下方有對應的影響值。", "error");
+                        return;
+                    } 
+
+                    if (originalMatrix_S.length !== factors.length || originalMatrix_S.some(row => row.length !== factors.length)) {
+                        showMessage(`Excel 檔案格式錯誤：因素數量 (${factors.length}) 與數據矩陣維度 (${originalMatrix_S.length}x${originalMatrix_S[0] ? originalMatrix_S[0].length : 0}) 不符。請確保資料為方陣且與因素數量一致。`, "error");
+                        factors = [];
+                        originalMatrix_S = [];
+                        return;
+                    }
+                    
+                    let diagonalOk = true;
+                    let invalidDataFound = false;
+                    for (let i = 0; i < originalMatrix_S.length; i++) {
+                        if (originalMatrix_S[i][i] !== 0) {
+                            diagonalOk = false;
+                        }
+                        for (let j = 0; j < originalMatrix_S[i].length; j++) {
+                            // jsonData[i+1][j+1] 是為了原始 Excel 中的值，用於錯誤提示
+                            const originalCellValue = jsonData[i+1] ? jsonData[i+1][j+1] : "未知"; 
+                            if (isNaN(originalMatrix_S[i][j])) { // 雖然前面已經處理過，但再次檢查以防萬一
+                                if (!invalidDataFound) {
+                                    showMessage(`警告：矩陣中發現無效數字（例如 "${originalCellValue}"），已自動視為 0。請檢查原始檔案。`, "warn");
+                                    invalidDataFound = true;
+                                }
+                                originalMatrix_S[i][j] = 0; 
+                            }
+                        }
+                    } 
+
+                    if (!diagonalOk) {
+                         showMessage("警告：直接關係矩陣的對角線元素（因素對自身的影響）應為 0。請檢查並修正資料，或於下一步確認後系統將以 0 計算。", "warn");
+                    } 
+
+                    displayMatrix(originalMatrixContainer, originalMatrix_S, factors, true, "S");
+                    matrixDisplaySection.classList.remove('hidden');
+                    resultsSection.classList.add('hidden'); 
+                    fileNameDisplay.textContent = `已成功載入檔案：${file.name}`;
+                     if (causalChart) { 
+                        causalChart.destroy();
+                        causalChart = null;
+                    }
+                    causalDiagramMessage.textContent = "";
+                    calculatedThresholdDisplay.textContent = ""; 
+                    confirmMatrixButton.focus(); // 焦點移到確認按鈕
+                } catch (error) {
+                    console.error("檔案解析錯誤:", error);
+                    showMessage("檔案解析失敗，請確認檔案格式是否正確或檔案未損毀。錯誤詳情：" + error.message, "error");
+                    matrixDisplaySection.classList.add('hidden');
+                }
+            };
+            reader.onerror = function(error) {
+                console.error("檔案讀取錯誤:", error);
+                showMessage("檔案讀取時發生錯誤，請稍後再試。", "error");
+            };
+            reader.readAsArrayBuffer(file);
+        } 
+
+        // --- 顯示矩陣 ---
+        function displayMatrix(container, matrix, labels, editable = false, matrixName = "") {
+            container.innerHTML = '';
+            if (!matrix || matrix.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 p-4 text-center">沒有資料可顯示。</p>';
+                return;
+            } 
+
+            const table = document.createElement('table');
+            table.className = 'w-full text-sm text-left text-slate-600 border-collapse'; // 使用 border-collapse
+            const thead = document.createElement('thead');
+            thead.className = 'text-xs text-slate-700 uppercase bg-slate-100'; // 調整背景色
+            const tbody = document.createElement('tbody'); 
+
+            let headerRow = `<tr><th class="p-3 w-24 text-slate-500">${matrixName}</th>`; 
+            labels.forEach(label => headerRow += `<th class="p-3 truncate max-w-xs">${label}</th>`); // truncate 長標籤
+            headerRow += '</tr>';
+            thead.innerHTML = headerRow; 
+
+            matrix.forEach((row, i) => {
+                let tableRow = `<tr class="hover:bg-slate-50"><th class="p-3 font-medium text-slate-700 truncate max-w-xs">${labels[i]}</th>`;
+                row.forEach((cell, j) => {
+                    if (editable) {
+                        tableRow += `<td class="p-1.5"><input type="number" value="${cell}" data-row="${i}" data-col="${j}" class="matrix-input w-full p-2 text-center rounded-md border-slate-300 focus:ring-blue-500 focus:border-blue-500"></td>`;
+                    } else {
+                        tableRow += `<td class="p-3">${typeof cell === 'number' ? (isNaN(cell) ? "N/A" : cell.toFixed(4)) : (cell === null || cell === undefined ? "0.0000" : String(cell))}</td>`;
+                    }
+                });
+                tableRow += '</tr>';
+                tbody.innerHTML += tableRow;
+            }); 
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            container.appendChild(table); 
+
+            if (editable) {
+                document.querySelectorAll('.matrix-input').forEach(input => {
+                    input.addEventListener('change', (e) => {
+                        const r = parseInt(e.target.dataset.row);
+                        const c = parseInt(e.target.dataset.col);
+                        let value = parseFloat(e.target.value);
+                        if (isNaN(value)) value = 0; 
+
+                        originalMatrix_S[r][c] = value;
+                        e.target.value = value; 
+
+                        if (r === c && value !== 0) {
+                            showMessage(`提醒：對角線元素 (${factors[r]}) 已被修改為 ${value}，DEMATEL 分析通常要求對角線為 0。`, "info");
+                        }
+                    });
+                });
+            }
+        } 
+
+        // --- 確認矩陣並執行 DEMATEL 計算 ---
+        confirmMatrixButton.addEventListener('click', () => {
+            if (originalMatrix_S.length === 0) {
+                showMessage("沒有有效的矩陣資料可以計算，請先上傳檔案。", "warn");
+                return;
+            }
+            let diagonalCorrected = false;
+            for (let i = 0; i < originalMatrix_S.length; i++) {
+                if (originalMatrix_S[i][i] !== 0) {
+                     if (!diagonalCorrected) { 
+                        showMessage(`注意：部分或所有對角線值非 0，已自動將其設為 0 以符合 DEMATEL 計算要求。`, "info");
+                        diagonalCorrected = true;
+                     }
+                     originalMatrix_S[i][i] = 0;
+                }
+            }
+            if (diagonalCorrected) {
+                displayMatrix(originalMatrixContainer, originalMatrix_S, factors, true, "S"); 
+            } 
+
+            performDematelCalculations();
+            const tMatrixIsValid = totalRelationshipMatrix_T && totalRelationshipMatrix_T.length > 0 && !totalRelationshipMatrix_T.flat().some(isNaN); 
+
+            if (tMatrixIsValid) {
+                 resultsSection.classList.remove('hidden');
+                 // 平滑滾動到結果區塊
+                 document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                 showMessage("DEMATEL 計算完成！結果已顯示如下。", "success");
+                 updateThresholdValue(); 
+                 drawCausalDiagram(factors, D_plus_R, D_minus_R);
+                 exportResultsButton.focus();
+            } else {
+                resultsSection.classList.remove('hidden'); 
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (!normalizedMatrix_X || normalizedMatrix_X.length === 0 || normalizedMatrix_X.flat().some(isNaN)) {
+                    normalizedMatrixContainer.innerHTML = '<p class="text-red-600 p-4 bg-red-100 rounded-md text-center">正規化矩陣計算失敗或包含無效數據。</p>';
+                }
+                totalRelationshipMatrixContainer.innerHTML = '<p class="text-red-600 p-4 bg-red-100 rounded-md text-center">總關係矩陣計算失敗或包含無效數據（例如，(I-X) 矩陣不可逆）。請檢查原始數據的合理性。</p>';
+                indicatorsContainer.innerHTML = '<p class="text-red-600 p-4 bg-red-100 rounded-md text-center">因總關係矩陣計算失敗，無法計算各項指標。</p>';
+                causalDiagramMessage.textContent = "因數據問題或計算錯誤，無法繪製因果圖。";
+                calculatedThresholdDisplay.textContent = "無法計算臨界值（總關係矩陣 T 無效或計算失敗）";
+                calculatedThresholdDisplay.classList.remove('bg-blue-50', 'border-blue-200', 'text-blue-600');
+                calculatedThresholdDisplay.classList.add('bg-red-50', 'border-red-200', 'text-red-600'); 
+
+                if (causalChart) { causalChart.destroy(); causalChart = null; }
+                causalDiagramCanvas.style.display = 'none';
+            }
+        }); 
+
+        // --- DEMATEL 計算邏輯 (核心演算法) ---
+        function performDematelCalculations() {
+            if (originalMatrix_S.length === 0) return;
+            const n = originalMatrix_S.length; 
+
+            // 1. 正規化直接關係矩陣 (X = S / max(rowSum(S)))
+            try {
+                const rowSums = originalMatrix_S.map(row => row.reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0));
+                const maxRowSum = Math.max(...rowSums); 
+
+                if (maxRowSum === 0 && originalMatrix_S.flat().every(val => val === 0)) {
+                     showMessage("注意：原始矩陣所有元素均為零。正規化結果將為全零矩陣，後續計算可能無意義。", "warn");
+                     normalizedMatrix_X = originalMatrix_S.map(row => row.map(() => 0));
+                } else if (maxRowSum <= 0) { 
+                    showMessage("錯誤：原始矩陣行和的最大值為零或負數，無法進行標準正規化。請檢查數據是否皆為非正數或影響方向設定有誤。", "error");
+                    normalizedMatrix_X = originalMatrix_S.map(row => row.map(() => NaN)); 
+                } else {
+                    normalizedMatrix_X = originalMatrix_S.map(row =>
+                        row.map(cell => (isNaN(cell) ? 0 : cell) / maxRowSum)
+                    );
+                }
+            } catch (e) {
+                showMessage(`正規化計算過程中發生錯誤: ${e.message}`, "error");
+                normalizedMatrix_X = originalMatrix_S.map(row => row.map(() => NaN)); // 標記為NaN以阻止後續計算
+            }
+            displayMatrix(normalizedMatrixContainer, normalizedMatrix_X, factors, false, "X"); 
+
+            // 2. 計算總關係矩陣 (T = X * (I - X)^-1)
+            if (normalizedMatrix_X.length > 0 && !normalizedMatrix_X.flat().some(isNaN)) {
+                try {
+                    const I = math.identity(n).toArray(); 
+                    const I_minus_X = math.subtract(I, normalizedMatrix_X);
+                    
+                    let I_minus_X_inv;
+                    try {
+                        I_minus_X_inv = math.inv(I_minus_X);
+                    } catch (invError) {
+                         console.error("計算 (I-X) 逆矩陣時出錯:", invError);
+                         showMessage(`計算總關係矩陣 T 失敗：(I-X) 矩陣可能為奇異矩陣（不可逆）。常見原因為因素間存在完全共線性或數據設定問題。請檢查原始數據。(${invError.message})`, "error");
+                         totalRelationshipMatrix_T = normalizedMatrix_X.map(row => row.map(() => NaN));
+                         calculateAndDisplayIndicators(totalRelationshipMatrix_T); // 即使T無效也調用，以顯示錯誤訊息
+                         return; // 提前退出，不再嘗試計算T
+                    } 
+
+                    totalRelationshipMatrix_T = math.multiply(normalizedMatrix_X, I_minus_X_inv); 
+
+                    if (totalRelationshipMatrix_T.some(row => row.some(val => isNaN(val) || !isFinite(val)))) {
+                        showMessage("錯誤：計算出的總關係矩陣 T 包含無效值 (NaN/Infinity)。這通常意味著 (I-X) 矩陣雖然可逆，但計算結果不穩定。請檢查原始數據的合理性，例如是否存在極端值。", "error");
+                         totalRelationshipMatrix_T = normalizedMatrix_X.map(row => row.map(() => NaN)); 
+                    }
+                } catch (error) {
+                    console.error("計算總關係矩陣 T 時出錯:", error);
+                    showMessage(`計算總關係矩陣 T 時發生未知錯誤: ${error.message}. 請檢查原始數據。`, "error");
+                    totalRelationshipMatrix_T = normalizedMatrix_X.map(row => row.map(() => NaN)); 
+                }
+            } else {
+                 totalRelationshipMatrix_T = []; 
+                 if (normalizedMatrix_X.flat().some(isNaN) && normalizedMatrix_X.length > 0) { // 僅當 X 實際計算過且失敗時提示
+                     showMessage("由於正規化矩陣計算失敗，無法計算總關係矩陣 T。", "error");
+                 }
+            }
+            displayMatrix(totalRelationshipMatrixContainer, totalRelationshipMatrix_T, factors, false, "T");
+            calculateAndDisplayIndicators(totalRelationshipMatrix_T);
+        }
+        // --- 計算並顯示指標 ---
+        function calculateAndDisplayIndicators(matrixT) {
+            if (!matrixT || matrixT.length === 0 || matrixT.flat().some(isNaN)) {
+                indicatorsContainer.innerHTML = '<p class="text-red-600 p-4 bg-red-100 rounded-md text-center">無法計算各項指標，因為總關係矩陣 T 包含無效數據或計算失敗。</p>';
+                D_values = []; R_values = []; D_plus_R = []; D_minus_R = [];
+                return;
+            }
+            const n = matrixT.length; 
+
+            D_values = matrixT.map(row => row.reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0)); 
+            R_values = math.transpose(matrixT).map(col => col.reduce((sum, val) => sum + (isNaN(val) ? 0 : val), 0)); 
+
+            D_plus_R = D_values.map((d, i) => (isNaN(d) || isNaN(R_values[i])) ? NaN : d + R_values[i]);
+            D_minus_R = D_values.map((d, i) => (isNaN(d) || isNaN(R_values[i])) ? NaN : d - R_values[i]);
+
+
+            const indicatorsTable = document.createElement('table');
+            indicatorsTable.className = 'w-full text-sm text-left text-slate-600 border-collapse';
+            let tableHTML = `<thead><tr class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <th class="p-3">因素</th>
+                                <th class="p-3">影響度 (D)</th>
+                                <th class="p-3">受影響度 (R)</th>
+                                <th class="p-3">中心度 (D+R)</th>
+                                <th class="p-3">原因度 (D-R)</th>
+                             </tr></thead><tbody>`; 
+
+            factors.forEach((factor, i) => {
+                tableHTML += `<tr class="hover:bg-slate-50">
+                                <th class="p-3 font-medium text-slate-700 truncate max-w-xs">${factor}</th>
+                                <td class="p-3">${isNaN(D_values[i]) ? "計算錯誤" : D_values[i].toFixed(4)}</td>
+                                <td class="p-3">${isNaN(R_values[i]) ? "計算錯誤" : R_values[i].toFixed(4)}</td>
+                                <td class="p-3">${isNaN(D_plus_R[i]) ? "計算錯誤" : D_plus_R[i].toFixed(4)}</td>
+                                <td class="p-3">${isNaN(D_minus_R[i]) ? "計算錯誤" : D_minus_R[i].toFixed(4)}</td>
+                              </tr>`;
+            });
+            tableHTML += `</tbody>`;
+            indicatorsTable.innerHTML = tableHTML;
+            indicatorsContainer.innerHTML = '';
+            indicatorsContainer.appendChild(indicatorsTable);
+        } 
+
+        // --- 臨界值處理 ---
+        thresholdTypeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customThresholdInputContainer.classList.remove('hidden');
+                customThresholdValueInput.value = ''; 
+                calculatedThresholdDisplay.textContent = '請輸入自訂臨界值。'; 
+                customThresholdValueInput.focus();
+            } else {
+                customThresholdInputContainer.classList.add('hidden');
+                updateThresholdValue(); 
+            }
+        }); 
+
+        customThresholdValueInput.addEventListener('input', function() { // 用 input 事件即時更新
+            if (thresholdTypeSelect.value === 'custom') {
+                const val = parseFloat(this.value);
+                if (!isNaN(val)) {
+                    currentThresholdValue = val;
+                    calculatedThresholdDisplay.textContent = `目前使用自訂臨界值： ${currentThresholdValue.toFixed(4)}`;
+                    calculatedThresholdDisplay.classList.remove('bg-red-50', 'border-red-200', 'text-red-600', 'bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
+                    calculatedThresholdDisplay.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-600');
+                } else {
+                    currentThresholdValue = null;
+                    calculatedThresholdDisplay.textContent = `自訂臨界值無效，請輸入有效的數字。`;
+                    calculatedThresholdDisplay.classList.remove('bg-blue-50', 'border-blue-200', 'text-blue-600', 'bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
+                    calculatedThresholdDisplay.classList.add('bg-red-50', 'border-red-200', 'text-red-600');
+                }
+            }
+        });
+        
+        function updateThresholdValue() {
+            calculatedThresholdDisplay.classList.remove('bg-red-50', 'border-red-200', 'text-red-600', 'bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
+            calculatedThresholdDisplay.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-600'); 
+
+            if (!totalRelationshipMatrix_T || totalRelationshipMatrix_T.length === 0 || totalRelationshipMatrix_T.flat().some(isNaN)) {
+                calculatedThresholdDisplay.textContent = "無法計算臨界值（總關係矩陣 T 無效或計算失敗）";
+                calculatedThresholdDisplay.classList.remove('bg-blue-50', 'border-blue-200', 'text-blue-600');
+                calculatedThresholdDisplay.classList.add('bg-red-50', 'border-red-200', 'text-red-600');
+                currentThresholdValue = null;
+                return;
+            } 
+
+            const allValues = totalRelationshipMatrix_T.flat().filter(v => !isNaN(v) && isFinite(v));
+            if (allValues.length === 0) {
+                calculatedThresholdDisplay.textContent = "無法計算臨界值（總關係矩陣 T 中無有效數據）";
+                 calculatedThresholdDisplay.classList.remove('bg-blue-50', 'border-blue-200', 'text-blue-600');
+                calculatedThresholdDisplay.classList.add('bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
+                currentThresholdValue = null;
+                return;
+            } 
+
+            const type = thresholdTypeSelect.value;
+            let threshold;
+            let displayText = "目前採用計算方式："; 
+
+            if (type === 'average') {
+                threshold = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+                displayText += `平均值，計算結果為 ${threshold.toFixed(4)}`;
+            } else if (type === 'median') {
+                const sortedValues = [...allValues].sort((a, b) => a - b);
+                const mid = Math.floor(sortedValues.length / 2);
+                threshold = sortedValues.length % 2 !== 0 ? sortedValues[mid] : (sortedValues[mid - 1] + sortedValues[mid]) / 2;
+                displayText += `中位數，計算結果為 ${threshold.toFixed(4)}`;
+            } else if (type === 'custom') {
+                // 自訂情況由 customThresholdValueInput 的 input 事件處理
+                // 若切換回自訂但輸入框為空或無效，則提示
+                const customVal = parseFloat(customThresholdValueInput.value);
+                if (!isNaN(customVal)) {
+                    threshold = customVal;
+                    displayText = `目前使用自訂臨界值： ${threshold.toFixed(4)}`;
+                } else {
+                    displayText = "自訂臨界值無效或尚未輸入，請在上方輸入框中提供數值。";
+                    currentThresholdValue = null; 
+                    calculatedThresholdDisplay.textContent = displayText;
+                    calculatedThresholdDisplay.classList.remove('bg-blue-50', 'border-blue-200', 'text-blue-600');
+                    calculatedThresholdDisplay.classList.add('bg-yellow-50', 'border-yellow-200', 'text-yellow-700');
+                    return; 
+                }
+            }
+            currentThresholdValue = threshold;
+            calculatedThresholdDisplay.textContent = displayText;
+        } 
+
+        // --- 繪製因果圖 ---
+        function drawCausalDiagram(labels, dPlusRData, dMinusRData) {
+            if (causalChart) {
+                causalChart.destroy(); 
+            }
+            if (!labels || !dPlusRData || !dMinusRData || labels.length === 0 || dPlusRData.length !== labels.length || dMinusRData.length !== labels.length || dPlusRData.some(isNaN) || dMinusRData.some(isNaN)) {
+                causalDiagramMessage.textContent = "因數據不足、包含無效值或計算錯誤，無法繪製因果圖。";
+                causalDiagramCanvas.style.display = 'none'; 
+                return;
+            }
+            causalDiagramCanvas.style.display = 'block'; 
+            causalDiagramMessage.textContent = ""; // 清空之前的訊息 
+
+            const datasets = labels.map((label, index) => {
+                return {
+                    label: label, 
+                    data: [{
+                        x: dPlusRData[index],
+                        y: dMinusRData[index],
+                        factorLabel: label 
+                    }],
+                    backgroundColor: chartColors[index % chartColors.length],
+                    borderColor: chartColors[index % chartColors.length].slice(0, -2), // 移除透明度，使邊框實色
+                    borderWidth: 1.5, 
+                    pointRadius: 8,  
+                    pointHoverRadius: 11, // 增加懸停時大小
+                    pointStyle: 'circle' 
+                };
+            }); 
+
+            const data = {
+                datasets: datasets
+            }; 
+
+            const config = {
+                type: 'scatter',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    layout: {
+                        padding: { // 圖表內邊距
+                            top: 20,
+                            right: 20,
+                            bottom: 20,
+                            left: 10
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: '中心度 (D+R) Prominence',
+                                font: { size: 14, weight: '600', family: "'Inter', 'Noto Sans TC', sans-serif" }, 
+                                color: '#374151',
+                                padding: { top: 10 }
+                            },
+                            grid: {
+                                color: '#e5e7eb',
+                                drawBorder: false, // 不繪製邊框，讓網格線更乾淨
+                            },
+                            ticks: {
+                                font: { family: "'Inter', 'Noto Sans TC', sans-serif", size: 11 },
+                                color: '#4b5563',
+                                precision: 3 // 小數點精度
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '原因度 (D-R) Relation',
+                                font: { size: 14, weight: '600', family: "'Inter', 'Noto Sans TC', sans-serif" },
+                                color: '#374151',
+                                padding: { bottom: 10 }
+                            },
+                             grid: {
+                                color: '#e5e7eb',
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                font: { family: "'Inter', 'Noto Sans TC', sans-serif", size: 11 },
+                                color: '#4b5563',
+                                precision: 3
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom', // 圖例改到底部
+                            align: 'center', // 圖例居中
+                             labels: {
+                                usePointStyle: true, 
+                                padding: 25, 
+                                boxWidth: 10, // 調整圖例點的大小
+                                boxHeight: 10,
+                                font: {
+                                    size: 12, 
+                                    family: "'Inter', 'Noto Sans TC', sans-serif"
+                                },
+                                color: '#374151'
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(30, 41, 59, 0.85)', // Tooltip 背景色 (slate-800)
+                            titleFont: { size: 14, family: "'Inter', 'Noto Sans TC', sans-serif", weight: 'bold' },
+                            bodyFont: { size: 12, family: "'Inter', 'Noto Sans TC', sans-serif" },
+                            padding: 12, 
+                            cornerRadius: 6, 
+                            displayColors: false, // 不顯示顏色小方塊
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                     return tooltipItems[0].dataset.data[0].factorLabel || '';
+                                },
+                                label: function(context) {
+                                    let xVal = context.parsed.x;
+                                    let yVal = context.parsed.y;
+                                    return [
+                                        `中心度 (D+R): ${xVal.toFixed(3)}`,
+                                        `原因度 (D-R): ${yVal.toFixed(3)}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                }
+            };
+            const diagramContainer = document.getElementById('causalDiagramContainer');
+            if (diagramContainer.clientHeight < 450) { 
+                diagramContainer.style.minHeight = '480px';
+            }
+            causalChart = new Chart(causalDiagramCanvas, config);
+        } 
+
+        // --- 其他按鈕事件 ---
+        function resetAllDataAndUI() {
+            excelFileInput.value = ''; // 清空檔案選擇
+            fileNameDisplay.textContent = '';
+            matrixDisplaySection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            originalMatrixContainer.innerHTML = '';
+            normalizedMatrixContainer.innerHTML = '';
+            totalRelationshipMatrixContainer.innerHTML = '';
+            indicatorsContainer.innerHTML = '';
+            
+            thresholdTypeSelect.value = 'average'; 
+            customThresholdInputContainer.classList.add('hidden');
+            customThresholdValueInput.value = '';
+            calculatedThresholdDisplay.textContent = '';
+            calculatedThresholdDisplay.classList.remove('bg-red-50', 'border-red-200', 'text-red-600', 'bg-yellow-50', 'border-yellow-200', 'text-yellow-700', 'bg-blue-50', 'border-blue-200', 'text-blue-600');
+
+
+            currentThresholdValue = null; 
+
+            factors = [];
+            originalMatrix_S = [];
+            normalizedMatrix_X = [];
+            totalRelationshipMatrix_T = [];
+            D_values = []; R_values = []; D_plus_R = []; D_minus_R = [];
+            if (causalChart) {
+                causalChart.destroy();
+                causalChart = null;
+            }
+            causalDiagramMessage.textContent = "";
+            causalDiagramCanvas.style.display = 'none'; // 確保圖表畫布也隱藏
+            document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+
+        reUploadButton.addEventListener('click', () => {
+            resetAllDataAndUI();
+            showMessage("所有資料已清空，請重新上傳檔案。", "info");
+            excelFileInput.focus();
+        }); 
+
+        analyzeNewButton.addEventListener('click', () => {
+            resetAllDataAndUI();
+            showMessage("所有資料已清空，您可以開始分析新的檔案。", "info");
+            excelFileInput.focus();
+        }); 
+
+        // --- 結果匯出 ---
+        exportResultsButton.addEventListener('click', () => {
+            if (factors.length === 0 && D_values.length === 0) { 
+                showMessage("目前沒有可匯出的分析結果。請先完成 DEMATEL 分析。", "warn");
+                return;
+            } 
+
+            try {
+                const wb = XLSX.utils.book_new();
+                // 統一數字格式化函數，處理 NaN 和 Infinity
+                const formatNumberForExport = (val) => {
+                    if (typeof val === 'number') {
+                        if (isNaN(val)) return "計算錯誤 (NaN)";
+                        if (!isFinite(val)) return `計算錯誤 (${val > 0 ? '+' : '-'}Infinity)`;
+                        return Number(val.toFixed(4)); // 保留數字類型以便 Excel 計算
+                    }
+                    return (val === undefined || val === null) ? "" : String(val);
+                };
+
+
+                if (originalMatrix_S.length > 0) {
+                    const ws_data_s = [
+                        ['原始直接關係矩陣 (S)', ...factors],
+                        ...originalMatrix_S.map((row, i) => [factors[i], ...row.map(cell => (typeof cell === 'number' && !isNaN(cell)) ? cell : String(cell) )]) 
+                    ];
+                    const ws_s = XLSX.utils.aoa_to_sheet(ws_data_s);
+                    XLSX.utils.book_append_sheet(wb, ws_s, "1. 原始關係矩陣S");
+                } 
+
+                if (normalizedMatrix_X.length > 0) { //  && !normalizedMatrix_X.flat().some(isNaN) 匯出時即使有NaN也匯出，讓使用者看到
+                    const ws_data_x = [
+                        ['正規化矩陣 (X)', ...factors],
+                        ...normalizedMatrix_X.map((row, i) => [factors[i], ...row.map(formatNumberForExport)])
+                    ];
+                    const ws_x = XLSX.utils.aoa_to_sheet(ws_data_x);
+                    XLSX.utils.book_append_sheet(wb, ws_x, "2. 正規化矩陣X");
+                } 
+
+                if (totalRelationshipMatrix_T.length > 0) { // && !totalRelationshipMatrix_T.flat().some(isNaN)
+                    const ws_data_t = [
+                        ['總關係矩陣 (T)', ...factors],
+                        ...totalRelationshipMatrix_T.map((row, i) => [factors[i], ...row.map(formatNumberForExport)])
+                    ];
+                    const ws_t = XLSX.utils.aoa_to_sheet(ws_data_t);
+                    XLSX.utils.book_append_sheet(wb, ws_t, "3. 總關係矩陣T");
+                } 
+
+                if (D_values.length > 0) { // && !D_values.some(isNaN)
+                    const indicatorsData = [
+                        ['因素', '影響度 (D)', '受影響度 (R)', '中心度 (D+R)', '原因度 (D-R)'],
+                        ...factors.map((factor, i) => [
+                            factor,
+                            formatNumberForExport(D_values[i]),
+                            formatNumberForExport(R_values[i]),
+                            formatNumberForExport(D_plus_R[i]),
+                            formatNumberForExport(D_minus_R[i])
+                        ])
+                    ];
+                    const ws_indicators = XLSX.utils.aoa_to_sheet(indicatorsData);
+                    XLSX.utils.book_append_sheet(wb, ws_indicators, "4. 各項指標");
+                }
+                
+                let thresholdToExportText = "未計算或計算失敗";
+                if (currentThresholdValue !== null && !isNaN(currentThresholdValue) && isFinite(currentThresholdValue)) {
+                    thresholdToExportText = formatNumberForExport(currentThresholdValue);
+                } else if (thresholdTypeSelect.value === 'custom' && (currentThresholdValue === null || isNaN(currentThresholdValue))) {
+                     thresholdToExportText = "自訂值無效或未輸入";
+                }
+                const thresholdTypeToExport = thresholdTypeSelect.options[thresholdTypeSelect.selectedIndex].text; 
+
+                const ws_data_threshold = [['參數', '數值'], [`臨界值計算方式 (${thresholdTypeToExport})`, thresholdToExportText]];
+                const ws_threshold = XLSX.utils.aoa_to_sheet(ws_data_threshold);
+                XLSX.utils.book_append_sheet(wb, ws_threshold, "5. 所用臨界值");
+                
+                // 自動調整欄寬 (簡易版，可能不完美)
+                Object.keys(wb.Sheets).forEach(sheetName => {
+                    const sheet = wb.Sheets[sheetName];
+                    const cols = [];
+                    XLSX.utils.sheet_to_json(sheet, {header:1}).forEach(row => {
+                        Object.values(row).forEach((val, i) => {
+                            const len = val ? String(val).length + 2 : 10; // +2 for padding
+                            cols[i] = Math.max(cols[i] || 0, len);
+                        });
+                    });
+                    sheet['!cols'] = cols.map(w => ({wch:w}));
+                });
+
+
+                const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const dataBlob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" });
+                const today = new Date();
+                const dateString = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2,'0')}${today.getDate().toString().padStart(2,'0')}`;
+                saveAs(dataBlob, `DEMATEL分析結果_${dateString}.xlsx`); 
+                showMessage("分析結果已成功匯出為 Excel 檔案。", "success"); 
+
+            } catch (error) {
+                console.error("匯出 Excel 失敗:", error);
+                showMessage("匯出 Excel 檔案時發生錯誤：" + error.message, "error");
+            }
+        }); 
+
+        // --- 訊息提示 ---
+        let messageTimeout;
+        function showMessage(message, type = "error") { 
+            messageText.textContent = message;
+            messageBox.className = 'fixed top-6 right-6 text-white p-4 rounded-lg shadow-xl z-[100]'; 
+
+            if (type === "success") {
+                messageBox.classList.add('bg-emerald-500'); // 使用 emerald
+            } else if (type === "info") {
+                messageBox.classList.add('bg-sky-500'); // 使用 sky
+            } else if (type === "warn" || type === "warning") { 
+                 messageBox.classList.add('bg-amber-500', 'text-slate-800'); // 使用 amber
+            } else { // error
+                messageBox.classList.add('bg-rose-500'); // 使用 rose
+            }
+            messageBox.classList.remove('hidden');
+            messageBox.style.animation = 'none'; 
+            void messageBox.offsetWidth; 
+            messageBox.style.animation = 'fadeInOut 5s ease-in-out forwards'; 
+
+            clearTimeout(messageTimeout); 
+            messageTimeout = setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 4900); 
+        } 
+
+        // --- MathJax 渲染 ---
+        function typesetMathJax() {
+            if (window.MathJax && MathJax.Hub) { // 增加 MathJax.Hub 檢查
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            typesetMathJax(); // 初始渲染
+            // 確保所有元素都已載入，尤其是 MathJax 腳本
+            if (!window.MathJax) {
+                console.warn("MathJax 腳本尚未載入完成。");
+            }
+        });
+    </script>
 </body>
 </html>
