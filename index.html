@@ -3,146 +3,143 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>住宅平面圖</title>
+  <title>套房平面圖</title>
   <style>
     :root {
       --bg: #f3f5f7;
-      --paper: #ffffff;
+      --paper: #fff;
       --line: #1f2937;
-      --light-line: #6b7280;
-      --accent: #2563eb;
-      --text: #111827;
+      --zone: #eff6ff;
+      --accent: #1d4ed8;
+      --txt: #111827;
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       background: var(--bg);
-      color: var(--text);
+      color: var(--txt);
       font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      display: grid;
       min-height: 100vh;
+      display: grid;
       place-items: center;
-      padding: 24px;
+      padding: 20px;
     }
-
     .sheet {
-      width: min(100%, 980px);
+      width: min(100%, 1000px);
       background: var(--paper);
       border-radius: 14px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 12px 28px rgba(0,0,0,.14);
       padding: 16px;
     }
-
-    h1 {
-      margin: 0 0 12px;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .subtitle {
-      margin: 0 0 14px;
-      color: #4b5563;
-      font-size: 13px;
-    }
-
-    svg {
-      width: 100%;
-      height: auto;
-      border: 1px solid #d1d5db;
-      background: #fff;
-    }
-
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    .subtitle { margin: 0 0 14px; font-size: 13px; color: #4b5563; }
+    svg { width: 100%; height: auto; border: 1px solid #d1d5db; background: #fff; }
     .wall { stroke: var(--line); stroke-width: 10; fill: none; }
-    .inner-wall { stroke: var(--line); stroke-width: 6; fill: none; }
-    .fixture { stroke: #374151; stroke-width: 3; fill: none; }
-    .furniture { stroke: #6b7280; stroke-width: 3; fill: #f9fafb; }
-    .zone { fill: #eef2ff; stroke: #93c5fd; stroke-width: 2; stroke-dasharray: 8 6; }
-    .label { font-size: 18px; fill: #111827; font-weight: 600; }
-    .small { font-size: 14px; fill: #374151; }
+    .inner { stroke: var(--line); stroke-width: 5; fill: none; }
+    .zone { fill: var(--zone); stroke: #93c5fd; stroke-width: 2; stroke-dasharray: 7 5; }
+    .furniture { fill: #f8fafc; stroke: #6b7280; stroke-width: 2.5; }
+    .fixture { fill: none; stroke: #374151; stroke-width: 2.5; }
+    .label { font-size: 16px; font-weight: 700; fill: #111827; }
+    .small { font-size: 12px; fill: #374151; }
     .dim { stroke: var(--accent); stroke-width: 2; marker-start: url(#arrow); marker-end: url(#arrow); }
-    .dim-text { font-size: 14px; fill: var(--accent); font-weight: 600; }
+    .dim-text { font-size: 12px; fill: var(--accent); font-weight: 700; }
   </style>
 </head>
 <body>
   <main class="sheet">
-    <h1>室內配置平面圖（重繪版）</h1>
-    <p class="subtitle">依手稿整理為清晰平面圖示意，包含玄關、衛浴、廚房、客廳與臥房區。</p>
+    <h1>套房空間配置平面圖（更新版）</h1>
+    <p class="subtitle">已依需求更新：入口收納、廚衛、客餐區、睡眠區與陽台設備，並標示主要尺寸與設備名稱。</p>
 
-    <svg viewBox="0 0 900 1500" role="img" aria-label="住宅平面配置圖">
+    <svg viewBox="0 0 980 1520" role="img" aria-label="套房平面配置圖">
       <defs>
         <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"></path>
+          <path d="M0 0 L10 5 L0 10z" fill="#1d4ed8" />
         </marker>
       </defs>
 
-      <!-- 外牆 -->
-      <path class="wall" d="M160 90 L150 110 L150 1420 L750 1420 L750 110 L730 90 Z" />
+      <path class="wall" d="M140 80 L140 1440 L840 1440 L840 80" />
 
-      <!-- 玄關與衛浴分區 -->
-      <line class="inner-wall" x1="160" y1="1170" x2="530" y2="1170" />
-      <line class="inner-wall" x1="530" y1="1170" x2="530" y2="1420" />
-      <line class="inner-wall" x1="530" y1="1170" x2="750" y2="1170" />
-      <line class="inner-wall" x1="620" y1="1170" x2="620" y2="1420" />
+      <line class="inner" x1="140" y1="1160" x2="840" y2="1160" />
+      <line class="inner" x1="560" y1="1160" x2="560" y2="1440" />
+      <line class="inner" x1="700" y1="1160" x2="700" y2="1440" />
+      <line class="inner" x1="140" y1="630" x2="840" y2="630" />
 
-      <!-- 臥房區分隔 -->
-      <line class="inner-wall" x1="160" y1="620" x2="750" y2="620" />
+      <rect class="zone" x="150" y="1180" width="400" height="250" />
+      <text class="label" x="165" y="1205">入口與收納區</text>
+      <rect class="furniture" x="165" y="1240" width="65" height="170" />
+      <text class="small" x="197" y="1328" text-anchor="middle" transform="rotate(-90 197 1328)">洞洞板</text>
+      <rect class="furniture" x="235" y="1240" width="72" height="170" />
+      <text class="small" x="271" y="1328" text-anchor="middle" transform="rotate(-90 271 1328)">鞋櫃 H106</text>
+      <rect class="furniture" x="312" y="1240" width="92" height="170" />
+      <text class="small" x="358" y="1328" text-anchor="middle" transform="rotate(-90 358 1328)">置物/電器櫃 H107</text>
+      <rect class="furniture" x="412" y="1188" width="130" height="236" />
+      <text class="small" x="477" y="1302" text-anchor="middle">衣櫃 360×88</text>
+      <text class="small" x="477" y="1320" text-anchor="middle">門板下放行李箱</text>
 
-      <!-- 右側櫃體 -->
-      <rect class="furniture" x="700" y="250" width="50" height="330" />
-      <rect class="furniture" x="700" y="640" width="50" height="220" />
+      <path class="fixture" d="M140 1440 A130 130 0 0 1 270 1310" />
+      <line class="fixture" x1="140" y1="1440" x2="270" y2="1310" />
+      <text class="small" x="170" y="1466">大門</text>
 
-      <!-- 床位 -->
-      <rect class="zone" x="360" y="300" width="290" height="290" />
-      <text class="label" x="400" y="450">Queen Bed</text>
-      <text class="small" x="430" y="474">188 × 188 cm</text>
+      <rect class="zone" x="565" y="1180" width="130" height="250" />
+      <text class="label" x="571" y="1206">廚房</text>
+      <rect class="furniture" x="574" y="1222" width="48" height="95" />
+      <text class="small" x="598" y="1274" text-anchor="middle" transform="rotate(-90 598 1274)">冰箱</text>
+      <rect class="furniture" x="625" y="1222" width="58" height="95" />
+      <text class="small" x="654" y="1248" text-anchor="middle">水槽</text>
+      <text class="small" x="654" y="1264" text-anchor="middle">上烘碗機</text>
+      <rect class="furniture" x="574" y="1322" width="109" height="55" />
+      <circle class="fixture" cx="614" cy="1350" r="11" />
+      <circle class="fixture" cx="646" cy="1350" r="11" />
+      <text class="small" x="628" y="1397" text-anchor="middle">IH 爐 ×2</text>
 
-      <!-- 沙發區 -->
-      <rect class="zone" x="430" y="700" width="220" height="240" />
-      <text class="label" x="500" y="830" text-anchor="middle">沙發區</text>
+      <rect class="zone" x="705" y="1180" width="130" height="250" />
+      <text class="label" x="715" y="1206">浴室</text>
+      <ellipse class="fixture" cx="770" cy="1248" rx="34" ry="24" />
+      <text class="small" x="770" y="1252" text-anchor="middle">洗手台</text>
+      <rect class="furniture" x="726" y="1278" width="45" height="54" rx="4" />
+      <text class="small" x="748" y="1310" text-anchor="middle">馬桶</text>
+      <rect class="furniture" x="777" y="1278" width="48" height="128" />
+      <text class="small" x="801" y="1345" text-anchor="middle" transform="rotate(-90 801 1345)">淋浴區</text>
+      <text class="small" x="712" y="1410">110V</text>
+      <text class="small" x="782" y="1410">220V</text>
 
-      <!-- 電視櫃 -->
-      <rect class="furniture" x="180" y="820" width="95" height="260" />
-      <text class="small" x="195" y="955" transform="rotate(-90 195 955)">TV 牆 / 收納</text>
+      <rect class="zone" x="150" y="650" width="690" height="500" />
+      <text class="label" x="165" y="678">起居與用餐區</text>
+      <rect class="furniture" x="190" y="760" width="95" height="260" />
+      <text class="small" x="206" y="895" transform="rotate(-90 206 895)">65吋 TV牆</text>
+      <text class="small" x="220" y="895" transform="rotate(-90 220 895)">冷氣/機上盒/WiFi</text>
+      <rect class="furniture" x="430" y="760" width="220" height="120" rx="12" />
+      <text class="small" x="540" y="827" text-anchor="middle">雙人沙發 IKEA SALTSJÖBADEN</text>
+      <rect class="furniture" x="460" y="930" width="230" height="70" rx="4" />
+      <text class="small" x="575" y="957" text-anchor="middle">IKEA NORDEN 摺疊桌</text>
+      <text class="small" x="575" y="976" text-anchor="middle">26/89/152 × 80</text>
+      <rect class="furniture" x="760" y="760" width="70" height="300" />
+      <text class="small" x="795" y="840" text-anchor="middle" transform="rotate(-90 795 840)">電器櫃</text>
+      <text class="small" x="810" y="840" text-anchor="middle" transform="rotate(-90 810 840)">微波/熱水壺/氣炸/電鍋</text>
+      <line class="dim" x1="350" y1="1060" x2="440" y2="1060" />
+      <text class="dim-text" x="395" y="1046" text-anchor="middle">走道 90cm</text>
 
-      <!-- 餐桌 -->
-      <rect class="furniture" x="560" y="1000" width="150" height="65" rx="4" />
-      <text class="small" x="635" y="1040" text-anchor="middle">餐桌</text>
+      <rect class="zone" x="150" y="100" width="690" height="510" />
+      <text class="label" x="165" y="130">睡眠區</text>
+      <rect class="furniture" x="300" y="220" width="310" height="320" />
+      <text class="small" x="455" y="385" text-anchor="middle">Queen Bed 182 × 188</text>
+      <rect class="furniture" x="630" y="420" width="70" height="70" />
+      <text class="small" x="665" y="458" text-anchor="middle">床邊桌 40×40</text>
+      <rect class="furniture" x="705" y="360" width="110" height="90" />
+      <text class="small" x="760" y="405" text-anchor="middle">化妝台 90×50</text>
 
-      <!-- 廚房中島 -->
-      <rect class="furniture" x="420" y="1225" width="90" height="165" />
-      <circle class="fixture" cx="465" cy="1320" r="26" />
-      <text class="small" x="465" y="1210" text-anchor="middle">廚房檯面</text>
+      <rect class="zone" x="150" y="20" width="690" height="58" />
+      <text class="label" x="165" y="55">陽台 / 室外區</text>
+      <rect class="furniture" x="610" y="28" width="76" height="40" />
+      <rect class="furniture" x="692" y="28" width="76" height="40" />
+      <text class="small" x="650" y="53" text-anchor="middle">室外機</text>
+      <text class="small" x="730" y="53" text-anchor="middle">室外機</text>
+      <text class="small" x="780" y="53">220V</text>
 
-      <!-- 衛浴 -->
-      <rect class="furniture" x="620" y="1210" width="120" height="190" />
-      <ellipse class="fixture" cx="680" cy="1260" rx="36" ry="26" />
-      <circle class="fixture" cx="680" cy="1350" r="24" />
-      <text class="small" x="680" y="1200" text-anchor="middle">衛浴</text>
-
-      <!-- 玄關門扇 -->
-      <path class="fixture" d="M160 1420 A120 120 0 0 1 280 1300" />
-      <line class="fixture" x1="160" y1="1420" x2="280" y2="1300" />
-      <text class="small" x="185" y="1452">大門</text>
-
-      <!-- 尺寸註記 -->
-      <line class="dim" x1="120" y1="130" x2="120" y2="1410" />
-      <text class="dim-text" x="92" y="780" transform="rotate(-90 92 780)">全長約 860 cm</text>
-
-      <line class="dim" x1="170" y1="70" x2="740" y2="70" />
-      <text class="dim-text" x="455" y="56" text-anchor="middle">室內寬約 380 cm</text>
-
-      <!-- 區域名稱 -->
-      <text class="label" x="205" y="170">臥房區</text>
-      <text class="label" x="205" y="760">客廳區</text>
-      <text class="label" x="200" y="1240">玄關 / 廚房區</text>
-
-      <!-- 北向 -->
-      <line class="fixture" x1="95" y1="180" x2="95" y2="110" />
-      <polygon points="95,90 85,115 105,115" fill="#111827" />
-      <text class="small" x="86" y="205">N</text>
+      <line class="dim" x1="110" y1="90" x2="110" y2="1440" />
+      <text class="dim-text" x="88" y="770" transform="rotate(-90 88 770)">全長約 860 cm</text>
+      <line class="dim" x1="150" y1="1475" x2="840" y2="1475" />
+      <text class="dim-text" x="495" y="1498" text-anchor="middle">室內寬約 380 cm</text>
     </svg>
   </main>
 </body>
